@@ -2,7 +2,6 @@
 #require "bundler/setup"
 
 require 'erb'
-require_relative "../prompt.rb"
 require_relative '../console.rb'
 
 #

@@ -5,7 +5,6 @@ require 'fileutils'
 require 'json'
 
 require_relative '../utils.rb'
-require_relative '../prompt.rb'
 require_relative '../console.rb'
 
 #
