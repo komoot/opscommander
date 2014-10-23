@@ -1,0 +1,157 @@
+#!/usr/bin/env ruby
+
+require 'pp'
+require 'pry'
+require 'rubygems'
+require 'commander/import'
+
+require './lib/aws/opsworks.rb'
+require './lib/commands/bootstrap.rb'
+require './lib/commands/bluegreen.rb'
+require './lib/commands/delete.rb'
+
+require './lib/vagrant/vagrant.rb'
+
+require './lib/utils.rb'
+
+program :version, '0.0.1'
+program :description, 'Manages bootstrapping, configuration and deployment of OpsWorks stacks'
+global_option '--yes'
+global_option '--verbose'
+
+command :bootstrap do |c|
+  c.syntax = 'OpsWorks commander bootstrap [options]'
+  c.summary = ''
+  c.description = 'Bootstraps a stack from config. Existing Instances/Layers can be deleted.'
+  c.example 'description', ''
+  c.option '--environment name', String, 'environment name (alpha, beta, production, ...)'
+  c.option '--config-file filename', String, 'path to yaml file'
+  c.option '--application-version version', String, 'optional application version'
+  c.option '--cookbooks-version version', String, 'optional cookbooks version' 
+  c.option '--start', 'Start all instances after creation'
+  c.action do |args, options|
+    ops = connect(options.verbose)
+    input = open_input(options.yes)
+    config = {
+      :environment => options.environment,
+      :cookbooks_version => options.cookbooks_version,
+      :application_version => options.application_version
+    }
+    configuration = load_config(options.config_file, config)
+
+    # debug info. refactor.
+    if options.verbose
+      puts "parsed yaml file content is:"
+      pp configuration
+      puts ""
+    end
+    bootstrap(ops, configuration, options.start, input)
+  end
+end
+
+command :test do |c|
+  c.syntax = 'OpsWorks commander test [options]'
+  c.summary = ''
+  c.description = 'Tests a stack configuration file with kitchen. Sequentially loads all layers and starts one instance with \'kitchen\''
+  c.example 'description', ''
+  c.option '--environment name', String, 'environment name (alpha, beta, production, ...)'
+  c.option '--config-file filename', String, 'path to yaml file'
+  c.option '--application-version version', String, 'optional application version'
+  c.option '--cookbooks-version version', String, 'optional cookbooks version' 
+  c.option '--filter filter', 'Filter layers by name'
+  c.action do |args, options|
+    input = open_input(options.yes)
+    config = {
+      :environment => options.environment,
+      :cookbooks_version => options.cookbooks_version,
+      :application_version => options.application_version
+    }
+    configuration = load_config(options.config_file, config)
+    vagrant_test(configuration)
+  end
+end
+
+command :delete do |c|
+  c.syntax = 'OpsWorks commander bootstrap [options]'
+  c.summary = ''
+  c.description = 'Deletes a stack.'
+  c.example 'description', ''
+  c.option '--stack-name name', String, 'stack name'
+  c.action do |args, options|
+    ops = connect(options.verbose)
+    input = open_input(options.yes)
+    delete(ops, options.stack_name, input)
+  end
+end
+
+command :bluegreen do |c|
+  c.syntax = 'OpsWorks commander blue-green [options]'
+  c.summary = ''
+  c.description = 'Deploys a new version by starting new blue layers and switching elbs afterwards.'
+  c.example 'description', 'command example'
+  c.option '--config-file filename', String, 'path to yaml file'
+  c.option '--environment name', String, 'environment name (alpha, beta, production, ...)'
+  c.option '--application-version version', String, 'optional application version'
+  c.option '--cookbooks-version version', String, 'optional cookbooks version' 
+  c.action do |args, options|
+    ops = connect(options.verbose)
+    input = open_input(options.yes)
+    config = {
+      :environment => options.environment,
+      :cookbooks_version => options.cookbooks_version,
+      :application_version => options.application_version
+    }
+    configuration = load_config(options.config_file, config)
+    if options.verbose
+      puts "parsed yaml file content is:"
+      pp configuration
+      puts ""
+    end
+    bluegreen(ops, configuration, input)
+  end
+end
+
+command :inplace do |c|
+  c.syntax = 'OpsWorks commander inplace [options]'
+  c.summary = ''
+  c.description = ''
+  c.example 'description', 'command example'
+  c.option '--some-switch', 'Some switch that does something'
+  c.action do |args, options|
+    # Do something or c.when_called Opsworks commander::Commands::Inplace
+  end
+end
+
+command :whoami do |c|
+  c.syntax = 'OpsWorks commander whoami'
+  c.summary = ''
+  c.description = 'Reads the current amazon credentials and displays the current user'
+  c.example 'description', 'command example'
+  c.option '--some-switch', 'Some switch that does something'
+  c.action do |args, options|
+    ops = connect(options.verbose)
+    ops.whoami
+  end
+end
+
+def connect(verbose)
+  ops = OpsWorks.new
+  ops.verbose = verbose
+  return ops
+end
+
+def open_input(yes)
+  Console.new(yes)
+end
+
+def load_config(yaml_file, config)
+  config = YAML.load(parse_erb(yaml_file, config))
+end
+
+def parse_erb(erb_file, config)
+  # read config json file
+  file = File.open(erb_file, "rb")
+  renderer = ErbHash.new(config)
+  renderer.render(file.read)
+end
+

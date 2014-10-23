@@ -1,4 +1,9 @@
-opscommander
+OpsWorks deployment tool
 ============
 
-Opsworks deployment tools for immutable blue/green deployments and more
+Bootstraps, Tests and Deploys OpsWorks stacks with different strategies (blue/green, rolling, quick)
+
+
+
+
+

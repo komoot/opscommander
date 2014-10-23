@@ -1,0 +1,33 @@
+Vagrant.configure("2") do |config|
+  
+  # caching is recommended
+  # For more information please check https://github.com/fgrehm/vagrant-cachier and http://docs.vagrantup.com/v2/synced-folders/basic_usage.html
+  if Vagrant.has_plugin?("vagrant-cachier")
+    config.cache.scope = :box
+  end
+
+  config.vm.hostname = "<%= name %>"
+
+  # TODO: also configure values from instance config
+  config.vm.box = "ubuntu-trusty64"
+  config.vm.box_url = "http://cloud-images.ubuntu.com/vagrant/trusty/current/trusty-server-cloudimg-amd64-vagrant-disk1.box"
+
+  config.vm.provider :virtualbox do |vb|
+    vb.name = "<%= name %>-vagrant"
+    vb.gui = false
+    vb.customize ["modifyvm", :id, "--memory", "1024"]
+  end
+  
+  # TODO: also configure from opsworks stack settings
+  config.omnibus.chef_version = :latest
+  config.berkshelf.enabled = true
+  config.ssh.forward_agent = true
+
+  config.vm.provision :chef_solo do |chef|
+    chef.json = <%= custom_json %>
+
+    chef.run_list = [
+      <%= run_list %>
+    ]
+  end
+end
