@@ -6,38 +6,38 @@ require 'highline/import'
 # Adds a non-interactive feature (always yes flag)
 class Console
 
-	attr_reader :non_interactive
-	attr_reader :verbose
+  attr_reader :non_interactive
+  attr_reader :verbose
 
-	def initialize(non_interactive, verbose=false)
-		@non_interactive = non_interactive
-		@verbose = verbose
-	end
+  def initialize(non_interactive, verbose=false)
+    @non_interactive = non_interactive
+    @verbose = verbose
+  end
 
-	# Asks the user for his choice or returns the default choice if non_interactive is set.
-	# message: text to print
-	# choices: letters to choose from like "Yna"
-	def choice(message, choices)
-		default = default(choices)
-		message = message + " [" + choices.split('').join('/') + "] ? "
-		if non_interactive
-			puts message + default
-			return default.downcase
-		else
-			value = ask(message, String) { |q| q.in = choices.downcase.split(""); }
-			return value.downcase
-		end
-	end
+  # Asks the user for his choice or returns the default choice if non_interactive is set.
+  # message: text to print
+  # choices: letters to choose from like "Yna"
+  def choice(message, choices)
+    default = default(choices)
+    message = message + " [" + choices.split('').join('/') + "] ? "
+    if non_interactive
+      puts message + default
+      return default.downcase
+    else
+      value = ask(message, String) { |q| q.in = choices.downcase.split(""); }
+      return value.downcase
+    end
+  end
 
-	private
+  private
 
-	def default(choices)
-		choices.split("").each do |i|
-  			if i.upcase.eql?(i)
-  				return i.upcase
-  			end
-  		end
-  		return nil
-	end
-	
+  def default(choices)
+    choices.split("").each do |i|
+        if i.upcase.eql?(i)
+          return i.upcase
+        end
+      end
+      return nil
+  end
+  
 end
