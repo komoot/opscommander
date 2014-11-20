@@ -1,10 +1,9 @@
 require 'pry'
 
 class OpsWorksLayer
-
-	def initialize(opsWorksStack, layer, verbose)
-		@opsWorksStack = opsWorksStack
-		@client = opsWorksStack.opsWorks.client #convenience
+	def initialize(stack, layer, verbose)
+		@stack = stack
+		@client = stack.opsworks.client #convenience
 		@layer = layer
 		@verbose = verbose
 	end
@@ -12,7 +11,7 @@ class OpsWorksLayer
 	def create_instance(instance_config)
 		copy = instance_config.clone
 		copy['layer_ids'] = [layer_id]
-		@opsWorksStack.create_instance(copy)
+		@stack.create_instance(copy)
 	end
 
 	def layer_id
@@ -28,9 +27,9 @@ class OpsWorksLayer
 
 	def nice_name(instance=nil)
 		if instance
-			return @opsWorksStack.stack_name + " :: " + name + " :: " + instance
+			return @stack.stack_name + " :: " + name + " :: " + instance
 		else
-			return @opsWorksStack.stack_name + " :: " + name
+			return @stack.stack_name + " :: " + name
 		end
 	end
 
@@ -79,7 +78,7 @@ class OpsWorksLayer
 	# @param elb_name [String]
 	# @return void
 	def detach_elb(elb_name)
-		puts "Attaching #{elb_name} to #{@opsWorksStack.stack_name}::#{name}" if @verbose
+		puts "Attaching #{elb_name} to #{@stack.stack_name}::#{name}" if @verbose
 		@client.detach_elastic_load_balancer({
 			:elastic_load_balancer_name => elb_name,
 			:layer_id => layer_id

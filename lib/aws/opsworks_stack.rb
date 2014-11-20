@@ -2,17 +2,16 @@ require "aws-sdk"
 require_relative '../poll.rb'
 require_relative 'opsworks_layer.rb'
 
-# A wrapper class for {http://docs.aws.amazon.com/AWSRubySDK/latest/AWS/OpsWorks/Client.html}.
 class OpsWorksStack
 
-  attr_reader :opsWorks
+  attr_reader :opsworks
 
-	def initialize(opsWorks, stack, verbose)
-    @client = opsWorks.client
-    @opsWorks = opsWorks
+  def initialize(opsworks, stack, verbose)
+    @client = opsworks.client
+    @opsworks = opsworks
     @stack = stack
     @verbose = verbose
-	end
+  end
 
   public
 
@@ -71,7 +70,7 @@ class OpsWorksStack
   def create_instance(instance_options)
     copy = instance_options.clone
     copy['stack_id'] = stack_id
-    @opsWorks.create_instance(copy)
+    @opsworks.create_instance(copy)
   end
 
   # Returns an array of layer instances that exist in the
@@ -96,12 +95,12 @@ class OpsWorksStack
   # Clones the current stack
   # See http://docs.aws.amazon.com/AWSRubySDK/latest/AWS/OpsWorks/Client.html#clone_stack-instance_method
   def clone_stack(new_stack_name)
-    stack = @opsWorks.client.clone_stack({
+    stack = @opsworks.client.clone_stack({
       :source_stack_id => stack_id,
       :name => new_stack_name
       })
 
-    stack = OpsWorksStack.new(@opsWorks, stack)
+    stack = OpsWorksStack.new(@opsworks, stack)
     puts "cloned stack #{stack[:stack_id]}" if @verbose
     return stack
   end
@@ -126,13 +125,42 @@ class OpsWorksStack
  
     Poll.poll(10 * 60, @verbose ? 5 : 15) do
       instances = layers.map{|l| l.get_instances}.flatten
-      print_current_status(instances)
+      print_current_instance_status(instances)
       all_instances_have_status?(instances, "stopped")
     end
     puts "All instances in #{stack_name} stopped."
 
     layers.each do |l| l.delete() end
     puts "All layers in #{stack_name} deleted."
+  end
+
+  # Creates a custom app. Use this as a proxy for triggering deployments.
+  def create_app(name, environment_variables)
+    environment = environment_variables.collect{ |k, v|
+      {:key => k, :value => v}
+    }
+
+    options = {
+      :stack_id => stack_id,
+      :type => "other",
+      :name => name,
+      :environment => environment
+    }
+
+    app = @client.create_app(options)
+    OpsWorksApp.new(self, app)
+  end
+
+  # Retrieves an app by name.
+  def get_app(name)
+    apps = @client.describe_apps({:stack_id => stack_id})[:apps]
+    app = apps.select {|a| a[:name].eql? name}
+
+    if apps.length == 0 
+      raise "Could not find app called \"#{name}\"!"
+    end
+    
+    OpsWorksApp.new(self, apps.first)
   end
 
   private
@@ -142,7 +170,7 @@ class OpsWorksStack
     instances.length == filtered.length
   end
 
-  def print_current_status(insts)
+  def print_current_instance_status(insts)
     puts " - " + insts.map { |i| "#{i[:hostname]} (#{i[:status]})" }.join(", ") 
   end
 
