@@ -1,6 +1,4 @@
-#require "rubygems"
-#require "bundler/setup"
-
+require 'pry'
 require 'erb'
 require_relative '../console.rb'
 
@@ -19,7 +17,7 @@ def bootstrap(ops, config, start_instances, input)
     existing_stack.delete
   end
 
-  bootstrap_stack(ops, config, start_instances, input)
+  bootstrap_stack(ops, config, input, start_instances)
 
   if not start_instances
     puts "\nNot starting instances because --start was not given"
