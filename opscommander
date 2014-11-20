@@ -1,7 +1,5 @@
 #!/usr/bin/env ruby
 
-require 'pp'
-require 'pry'
 require 'rubygems'
 require 'commander/import'
 
@@ -20,47 +18,44 @@ global_option '--yes'
 global_option '--verbose'
 
 command :bootstrap do |c|
-  c.syntax = 'OpsWorks commander bootstrap [options]'
-  c.summary = ''
+  c.syntax = 'opscommander bootstrap [options]'
   c.description = 'Bootstraps a stack from config. Existing Instances/Layers can be deleted.'
-  c.example 'description', ''
-  c.option '--environment name', String, 'environment name (alpha, beta, live, ...)'
-  c.option '--config-file filename', String, 'path to yaml file'
-  c.option '--application-version version', String, 'optional application version'
-  c.option '--cookbooks-version version', String, 'optional cookbooks version' 
-  c.option '--start', 'Start all instances after creation'
+  c.option '--environment [name]', String, 'environment name (alpha, beta, live, ...). Default: beta.'
+  c.option '--config-file [filename]', String, 'path to yaml file.'
+  c.option '--application-version [version]', String, 'optional application version.'
+  c.option '--cookbooks-version [version]', String, 'optional cookbooks version.' 
+  c.option '--start', 'Start all instances after creation. Default: false.'
   c.action do |args, options|
+    options.default \
+      :environment => 'beta',
+      :start => false
+
     ops = connect(options.verbose)
     input = open_input(options.yes)
+    
     config = {
       :environment => options.environment,
       :cookbooks_version => options.cookbooks_version,
       :application_version => options.application_version
     }
+
     configuration = load_config(options.config_file, config)
-
-    # debug info. refactor.
-    if options.verbose
-      puts "parsed yaml file content is:"
-      pp configuration
-      puts ""
-    end
-
     bootstrap(ops, configuration, options.start, input)
   end
 end
 
 command :test do |c|
-  c.syntax = 'OpsWorks commander test [options]'
-  c.summary = ''
-  c.description = 'Tests a stack configuration file with kitchen. Sequentially loads all layers and starts one instance with \'kitchen\''
-  c.example 'description', ''
-  c.option '--environment name', String, 'environment name (alpha, beta, production, ...)'
-  c.option '--config-file filename', String, 'path to yaml file'
-  c.option '--application-version version', String, 'optional application version'
-  c.option '--cookbooks-version version', String, 'optional cookbooks version' 
-  c.option '--filter filter', 'Filter layers by name'
+  c.syntax = 'opscommander test [options]'
+  c.description = 'Tests a stack configuration file with Test Kitchen. Sequentially loads all layers and starts one instance with \'kitchen\'.'
+  c.option '--environment [name]', String, 'environment name (alpha, beta, live, ...). Default: beta.'
+  c.option '--config-file [filename]', String, 'path to yaml file.'
+  c.option '--application-version [version]', String, 'optional application version.'
+  c.option '--cookbooks-version [version]', String, 'optional cookbooks version.' 
+  c.option '--filter filter', 'Filter layers by name.'
   c.action do |args, options|
+    options.default \
+      :environment => 'beta'
+
     input = open_input(options.yes)
     config = {
       :environment => options.environment,
@@ -73,11 +68,9 @@ command :test do |c|
 end
 
 command :delete do |c|
-  c.syntax = 'OpsWorks commander bootstrap [options]'
-  c.summary = ''
+  c.syntax = 'opscommander delete [options]'
   c.description = 'Deletes a stack.'
-  c.example 'description', ''
-  c.option '--stack-name name', String, 'stack name'
+  c.option '--stack-name [name]', String, 'stack name.'
   c.action do |args, options|
     ops = connect(options.verbose)
     input = open_input(options.yes)
@@ -92,15 +85,16 @@ end
 #end
 
 command :bluegreen do |c|
-  c.syntax = 'OpsWorks commander blue-green [options]'
-  c.summary = ''
+  c.syntax = 'opscommander blue-green [options]'
   c.description = 'Deploys a new version by starting new blue layers and switching elbs afterwards.'
-  c.example 'description', 'command example'
-  c.option '--config-file filename', String, 'path to yaml file'
-  c.option '--environment name', String, 'environment name (alpha, beta, production, ...)'
-  c.option '--application-version version', String, 'optional application version'
-  c.option '--cookbooks-version version', String, 'optional cookbooks version' 
+  c.option '--config-file [filename]', String, 'path to yaml file.'
+  c.option '--environment [name]', String, 'environment name (alpha, beta, live, ...). Default: beta.'
+  c.option '--application-version [version]', String, 'optional application version.'
+  c.option '--cookbooks-version [version]', String, 'optional cookbooks version.' 
   c.action do |args, options|
+    options.default \
+      :environment => 'beta'
+
     ops = connect(options.verbose)
     input = open_input(options.yes)
     config = {
@@ -109,32 +103,15 @@ command :bluegreen do |c|
       :application_version => options.application_version
     }
     configuration = load_config(options.config_file, config)
-    if options.verbose
-      puts "parsed yaml file content is:"
-      pp configuration
-      puts ""
-    end
     bluegreen(ops, configuration, input)
   end
 end
 
-command :inplace do |c|
-  c.syntax = 'OpsWorks commander inplace [options]'
-  c.summary = ''
-  c.description = ''
-  c.example 'description', 'command example'
-  c.option '--some-switch', 'Some switch that does something'
-  c.action do |args, options|
-    # Do something or c.when_called Opsworks commander::Commands::Inplace
-  end
-end
+# TODO: :inplace command for (re-)deployment with downtime
 
 command :whoami do |c|
-  c.syntax = 'OpsWorks commander whoami'
-  c.summary = ''
-  c.description = 'Reads the current amazon credentials and displays the current user'
-  c.example 'description', 'command example'
-  c.option '--some-switch', 'Some switch that does something'
+  c.syntax = 'opscommander whoami'
+  c.description = 'Reads the current amazon credentials and displays the current user.'
   c.action do |args, options|
     ops = connect(options.verbose)
     ops.whoami
