@@ -24,7 +24,7 @@ command :bootstrap do |c|
   c.summary = ''
   c.description = 'Bootstraps a stack from config. Existing Instances/Layers can be deleted.'
   c.example 'description', ''
-  c.option '--environment name', String, 'environment name (alpha, beta, production, ...)'
+  c.option '--environment name', String, 'environment name (alpha, beta, live, ...)'
   c.option '--config-file filename', String, 'path to yaml file'
   c.option '--application-version version', String, 'optional application version'
   c.option '--cookbooks-version version', String, 'optional cookbooks version' 
@@ -45,6 +45,7 @@ command :bootstrap do |c|
       pp configuration
       puts ""
     end
+
     bootstrap(ops, configuration, options.start, input)
   end
 end
@@ -83,6 +84,12 @@ command :delete do |c|
     delete(ops, options.stack_name, input)
   end
 end
+
+#command :create_app do |c|
+  #c.syntax 'opscommander create_app [options] <name> [environment variables]'
+  #c.summary ''
+  #c.description 'Creates an application, overwriting any old one with the same name.'
+#end
 
 command :bluegreen do |c|
   c.syntax = 'OpsWorks commander blue-green [options]'
