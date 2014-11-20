@@ -11,7 +11,7 @@ def bootstrap(ops, config, start_instances, input)
   # check if stack already exists
   existing_stack = ops.find_stack stack_name
   if existing_stack
-    if input.choice("A stack with the name #{stack_name} already exists. Do you want to delete it or abort?", "dA") == 'a'
+    if input.choice("A stack with the name #{stack_name} already exists. Do you want to delete it or abort?", "da") == 'a'
       exit 1
     end
     existing_stack.delete
