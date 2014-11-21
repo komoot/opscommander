@@ -7,6 +7,7 @@ require './lib/aws/opsworks.rb'
 require './lib/commands/bootstrap.rb'
 require './lib/commands/bluegreen.rb'
 require './lib/commands/delete.rb'
+require './lib/commands/create_app.rb'
 
 require './lib/vagrant/vagrant.rb'
 
@@ -94,7 +95,7 @@ command :create_app do |c|
   c.description = 'Creates an application, overwriting any old one with the same name. The app must be defined in the stack definition yaml file.'
   c.option '--config-file [filename]', String, 'path to stack definition yaml file.'
   c.option '--environment [environment]', String, 'environment name (alpha, beta, live, ...). Default: beta.'
-  c.option '--variable [key]=[value]', String, 'optionally set an environment variable, or override if already set in yaml file.'
+  c.option '--variables [key=value,key=value,...]', String, 'optionally set environment variables, or override if already set in yaml file.'
   c.action do |args, options|
     if not options.config_file
       say 'Please specify the path to a stack definition yaml file.'
@@ -110,13 +111,21 @@ command :create_app do |c|
     end
 
     app_name = args[0]
-    
+
     ops = connect(options.verbose)
-    input = open_input(options.yes)
     configuration = load_config(options.config_file, :environment => options.environment)
 
-    require 'pp'
-    pp configuration
+    if not configuration['apps']
+      say "No apps defined in the stack definition yaml."
+      exit
+    end
+
+    if not configuration['apps'].has_key?(app_name)
+      say "The app '#{app_name}' is not defined in the stack definition yaml."
+      exit
+    end
+
+    create_app(ops, configuration, app_name, options.variables)
   end
 end
 
@@ -179,4 +188,5 @@ def parse_erb(erb_file, config)
   renderer = ErbHash.new(config)
   renderer.render(file.read)
 end
+
 
