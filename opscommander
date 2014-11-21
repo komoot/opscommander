@@ -8,6 +8,7 @@ require './lib/commands/bootstrap.rb'
 require './lib/commands/bluegreen.rb'
 require './lib/commands/delete.rb'
 require './lib/commands/create_app.rb'
+require './lib/commands/deploy_app.rb'
 
 require './lib/vagrant/vagrant.rb'
 
@@ -28,8 +29,7 @@ command :bootstrap do |c|
   c.option '--start', 'Start all instances after creation. Default: false.'
   c.action do |args, options|
     if not options.config_file
-      say 'Please specify the path to a stack definition yaml file.'
-      exit
+      report_error 'Please specify the path to a stack definition yaml file.'
     end
 
     options.default \
@@ -61,8 +61,7 @@ command :test do |c|
   c.option '--filter filter', 'Filter layers by name.'
   c.action do |args, options|
     if not options.config_file
-      say 'Please specify the path to a stack definition yaml file.'
-      exit
+      report_error 'Please specify the path to a stack definition yaml file.'
     end
 
     options.default \
@@ -97,17 +96,16 @@ command :create_app do |c|
   c.option '--environment [environment]', String, 'environment name (alpha, beta, live, ...). Default: beta.'
   c.option '--variables [key=value,key=value,...]', String, 'optionally set environment variables, or override if already set in yaml file.'
   c.action do |args, options|
+
     if not options.config_file
-      say 'Please specify the path to a stack definition yaml file.'
-      exit
+      report_error 'Please specify the path to a stack definition yaml file.'
     end
 
     options.default \
       :environment => 'beta'
 
     if args.length == 0
-      say 'Please enter an app name.'
-      exit
+      report_error 'Please enter an app name.'
     end
 
     app_name = args[0]
@@ -116,19 +114,50 @@ command :create_app do |c|
     configuration = load_config(options.config_file, :environment => options.environment)
 
     if not configuration['apps']
-      say "No apps defined in the stack definition yaml."
-      exit
+      report_error "No apps defined in the stack definition yaml."
     end
 
     if not configuration['apps'].has_key?(app_name)
-      say "The app '#{app_name}' is not defined in the stack definition yaml."
-      exit
+      report_error "The app '#{app_name}' is not defined in the stack definition yaml."
     end
 
     create_app(ops, configuration, app_name, options.variables)
   end
 end
 
+command :deploy_app do |c|
+  c.syntax = 'opscommander deploy_app [options] <name>'
+  c.description = 'Deploys an application. The app must be defined in the stack definition yaml file and it must exist in OpsWorks (see create_app).'
+  c.option '--config-file [filename]', String, 'path to stack definition yaml file.'
+  c.option '--environment [environment]', String, 'environment name (alpha, beta, live, ...). Default: beta.'
+  c.action do |args, options|
+    if not options.config_file
+      report_error 'Please specify the path to a stack definition yaml file.'
+    end
+
+    options.default \
+      :environment => 'beta'
+
+    if args.length == 0
+      report_error 'Please enter an app name.'
+    end
+
+    app_name = args[0]
+
+    ops = connect(options.verbose)
+    configuration = load_config(options.config_file, :environment => options.environment)
+
+    if not configuration['apps']
+      report_error "No apps defined in the stack definition yaml."
+    end
+
+    if not configuration['apps'].has_key?(app_name)
+      report_error "The app '#{app_name}' is not defined in the stack definition yaml."
+    end
+
+    deploy_app(ops, configuration, app_name)
+  end
+end
 command :bluegreen do |c|
   c.syntax = 'opscommander blue-green [options]'
   c.description = 'Deploys a new version by starting new blue layers and switching elbs afterwards.'
@@ -138,8 +167,7 @@ command :bluegreen do |c|
   c.option '--cookbooks-version [version]', String, 'optional cookbooks version.' 
   c.action do |args, options|
     if not options.config_file
-      say 'Please specify the path to a stack definition yaml file.'
-      exit
+      report_error 'Please specify the path to a stack definition yaml file.'
     end
 
     options.default \
@@ -172,6 +200,11 @@ def connect(verbose)
   ops = OpsWorks.new
   ops.verbose = verbose
   return ops
+end
+
+def report_error(message)
+  say message
+  exit 1
 end
 
 def open_input(yes)
