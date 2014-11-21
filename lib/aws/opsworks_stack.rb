@@ -4,6 +4,7 @@ require 'pry'
 require_relative '../poll.rb'
 require_relative 'opsworks_layer.rb'
 require_relative 'opsworks_app.rb'
+require_relative 'opsworks_deployment.rb'
 
 class OpsWorksStack
 
@@ -181,6 +182,23 @@ class OpsWorksStack
       @client.delete_app({:app_id => a[:app_id]})
       puts "App '#{a[:name]}' deleted."
     end
+  end
+
+  # Deploys an app. 
+  def deploy_app(name)
+    app = get_app(name)
+
+    online_instances = @client.describe_instances({:stack_id => stack_id})[:instances].select{|i| i[:status] == 'online'}
+    if online_instances.empty?
+      raise "No online instances."
+    end
+
+    instance_ids = online_instances.reduce([]) do |ids, i|
+      ids << i[:instance_id]
+    end
+
+    OpsWorksDeployment.new(self, app.deploy(instance_ids))
+    #TODO: poll
   end
 
   private
