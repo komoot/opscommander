@@ -111,6 +111,7 @@ class OpsWorksStack
   # deletes the entire stack. This method is potentially dangerous!
   def delete
     delete_layers_by_name()
+    delete_apps()
     @client.delete_stack({:stack_id => stack_id})
     puts "Deleted #{stack_name}."
   end
@@ -163,6 +164,15 @@ class OpsWorksStack
     end
     
     OpsWorksApp.new(self, apps.first)
+  end
+
+  # Deletes all apps in the stack
+  def delete_apps()
+    apps = @client.describe_apps({:stack_id => stack_id})[:apps]
+    apps.each do |a|
+      @client.delete_app({:app_id => a[:app_id]})
+      puts "App '#{a[:name]}' deleted."
+    end
   end
 
   private
