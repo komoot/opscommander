@@ -46,6 +46,10 @@ def bootstrap_stack(ops, config, input, start_instances, attach_elb=true)
     end
   end
 
+  config['apps'].each do |a, config|
+    stack.create_app(a, config)
+  end
+
   #start all instances if needed
   if start_instances
     instances = []

@@ -1,6 +1,9 @@
-require "aws-sdk"
+require 'aws-sdk'
+require 'pry'
+
 require_relative '../poll.rb'
 require_relative 'opsworks_layer.rb'
+require_relative 'opsworks_app.rb'
 
 class OpsWorksStack
 
@@ -134,18 +137,17 @@ class OpsWorksStack
     puts "All layers in #{stack_name} deleted."
   end
 
-  # Creates a custom app. Use this as a proxy for triggering deployments.
-  def create_app(name, environment_variables)
-    environment = environment_variables.collect{ |k, v|
-      {:key => k, :value => v}
+  # Create an app.
+  def create_app(name, options)
+    
+    # remap environment from our configuration style to OpsWorks' 
+    options['environment'] = options['environment'].collect{ |k, v|
+      {'key' => k, 'value' => v}
     }
 
-    options = {
-      :stack_id => stack_id,
-      :type => "other",
-      :name => name,
-      :environment => environment
-    }
+    options['name'] = name
+    options['stack_id'] = stack_id
+    options['data_sources'] = []
 
     app = @client.create_app(options)
     OpsWorksApp.new(self, app)
