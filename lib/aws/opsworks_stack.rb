@@ -155,7 +155,7 @@ class OpsWorksStack
 
     options['name'] = name
     options['stack_id'] = stack_id
-    options['data_sources'] = []
+    options['data_sources'] = [] if not options['data_sources']
 
     app = @client.create_app(options)
     puts "Created app '#{name}'."
