@@ -52,16 +52,14 @@ class OpsWorksLayer
   # sends a start signal to all permanent instances in this layer
   def send_start
     ids = []
-      get_instances().each do |i|
-        if not ['load', 'time'].include?(i[:auto_scaling_type])
-          if @verbose
-          puts "starting #{i[:name]} #{i[:auto_scaling_type]}"
-        end
+    get_instances().each do |i|
+      if not ['load', 'time'].include?(i[:auto_scaling_type])
+        puts "starting #{i[:name]} #{i[:auto_scaling_type]}" if @verbose
         @client.start_instance({:instance_id => i[:instance_id]})
         ids.push(i[:instance_id])
-        end
       end
-      return ids
+    end
+    return ids
   end
 
   # Checks if the layer is associated with the given elb
