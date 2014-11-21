@@ -5,7 +5,7 @@ class OpsWorksDeployment
   def initialize(stack, deployment)
     @stack = stack
     @client = @stack.opsworks.client 
-    @app = app
+    @deployment = deployment
   end
 
   def deployment_id
@@ -15,7 +15,7 @@ class OpsWorksDeployment
   def get_status()
     d = @client.describe_deployments({
       :deployment_ids => [deployment_id]
-    })[:deployments]
+    })[:deployments].first
 
     if not d
       raise "Could not find deployment with id #{deployment_id}!"

@@ -197,11 +197,26 @@ class OpsWorksStack
       ids << i[:instance_id]
     end
 
-    OpsWorksDeployment.new(self, app.deploy(instance_ids))
-    #TODO: poll
+    deployment = OpsWorksDeployment.new(self, app.deploy(instance_ids))
+
+    Poll.poll(10 * 60, @verbose ? 5 : 15) do
+      status = deployment.get_status
+      puts "Deployment status: #{status}"
+      deployment_finished?(status)
+    end
+
+    if (status != 'successful') 
+      raise "Deployment unsuccesful!"
+    end
+
+    puts "Deployment successful."
   end
 
   private
+
+  def deployment_finished?(status)
+    return status == 'successful' || status == 'failed'
+  end
 
   def all_instances_have_status?(instances, status)
     filtered = instances.select {|i| i[:status] == status}
