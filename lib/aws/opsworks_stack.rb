@@ -198,6 +198,7 @@ class OpsWorksStack
     end
 
     deployment = OpsWorksDeployment.new(self, app.deploy(instance_ids))
+    status = 'running'
 
     Poll.poll(10 * 60, @verbose ? 5 : 15) do
       status = deployment.get_status
