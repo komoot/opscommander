@@ -1,9 +1,9 @@
 # -*- encoding: utf-8 -*-
 $:.push File.expand_path("../lib", __FILE__)
-require "mygem/version"
 
 Gem::Specification.new do |s|
   s.name        = "opscommander"
+  s.license     = "Apache 2.0"
   s.version     = "0.1.0"
   s.platform    = Gem::Platform::RUBY
   s.authors     = ["Jan Heuer", "Johannes Staffans"]
@@ -12,8 +12,8 @@ Gem::Specification.new do |s|
   s.summary     = %q{OpsWorks commander}
   s.description = %q{Scripting for AWS OpsWorks}
 
-  s.add_runtime_dependency "commander", ">=4.2.1"
-  s.add_runtime_dependency "aws-sdk", ">=1.0"
+  s.add_runtime_dependency "commander", "~>4.2"
+  s.add_runtime_dependency "aws-sdk", "~>1.0"
 
   s.files         = `git ls-files`.split("\n")
   s.test_files    = `git ls-files -- {test,spec}/*`.split("\n")
