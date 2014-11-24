@@ -3,16 +3,16 @@
 require 'rubygems'
 require 'commander/import'
 
-require '../lib/aws/opsworks.rb'
-require '../lib/commands/bootstrap.rb'
-require '../lib/commands/bluegreen.rb'
-require '../lib/commands/delete.rb'
-require '../lib/commands/create_app.rb'
-require '../lib/commands/deploy_app.rb'
+require 'aws/opsworks.rb'
+require 'commands/bootstrap.rb'
+require 'commands/bluegreen.rb'
+require 'commands/delete.rb'
+require 'commands/create_app.rb'
+require 'commands/deploy_app.rb'
 
-require '../lib/vagrant/vagrant.rb'
+require 'vagrant/vagrant.rb'
 
-require '../lib/utils.rb'
+require 'utils.rb'
 
 program :version, '0.0.1'
 program :description, 'Manages bootstrapping, configuration and deployment of OpsWorks stacks'
