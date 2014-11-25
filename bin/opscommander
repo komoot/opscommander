@@ -187,6 +187,26 @@ end
 
 # TODO: :inplace command for (re-)deployment with downtime
 
+command :cat do |c|
+  c.syntax = 'opscommander cat [options]'
+  c.description = 'Outputs the parsed yaml config file'
+  c.option '--config-file [filename]', String, 'path to stack definition yaml file.'
+  c.option '--environment [name]', String, 'environment name (alpha, beta, live, ...). Default: beta.'
+  c.action do |args, options|
+    if not options.config_file
+      report_error 'Please specify the path to a stack definition yaml file.'
+    end
+
+    options.default \
+      :environment => 'beta'
+
+    config = {
+      :environment => options.environment,
+    }
+    puts parse_erb(options.config_file, config)
+  end
+end
+
 command :whoami do |c|
   c.syntax = 'opscommander whoami'
   c.description = 'Reads the current amazon credentials and displays the current user.'
@@ -216,7 +236,7 @@ def load_config(yaml_file, config)
 end
 
 def parse_erb(erb_file, config)
-  # read config json file
+  # read config erb file
   file = File.open(erb_file, "rb")
   renderer = ErbHash.new(config)
   renderer.render(file.read)
