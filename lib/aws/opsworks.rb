@@ -36,14 +36,16 @@ class OpsWorks
   #
   # @param stack_name [String] The stack name, e.g. "routing-alpha"
   # @return OpsWorksStack instance
-    def find_stack(stack_name)
+  def find_stack(stack_name)
     stacks = @client.describe_stacks()[:stacks]
+    puts "#{stacks.length} stacks found in total." if @verbose
     if stacks.length > 0
-      stack = stacks.select {|stack| stack[:name] == stack_name }.first
+      stack = stacks.select{|s| s[:name] == stack_name}.first
       if stack
         return OpsWorksStack.new(self, stack, @verbose)
       end
     end
+
     return nil
   end
 
