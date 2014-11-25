@@ -8,6 +8,8 @@ class OpsWorks
   attr_accessor :verbose
 
   attr_reader :client
+
+  attr_reader :elb_client
   
   def initialize(client=nil, region='eu-west-1', verbose=false)
     @verbose = verbose
@@ -18,7 +20,7 @@ class OpsWorks
     else
       @client = client
     end
-
+    @elb_client = AWS::ELB.new
     whoami if @verbose
   end
 

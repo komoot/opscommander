@@ -5,7 +5,7 @@ require_relative '../console.rb'
 #
 # Bootstraps a stack. (Currently designed for routing)
 #
-def bootstrap(ops, config, start_instances, input)
+def bootstrap(ops, config, start_instances, input, create_elb=false)
   stack_name = config['stack']['name']
 
   # check if stack already exists
@@ -17,7 +17,7 @@ def bootstrap(ops, config, start_instances, input)
     existing_stack.delete
   end
 
-  bootstrap_stack(ops, config, input, start_instances)
+  bootstrap_stack(ops, config, input, start_instances, true, create_elb)
 
   if not start_instances
     puts "\nNot starting instances because --start was not given"
@@ -27,11 +27,11 @@ end
 
 # Creates a new stack from the given config. If a stack with the given name already
 # exists, no exception is thrown and you have two stacks with the same name.
-def bootstrap_stack(ops, config, input, start_instances, attach_elb=true)
+def bootstrap_stack(ops, config, input, start_instances, attach_elb=true, create_elb=false)
   # create new stack
   puts "Creating stack #{config['stack']['name']} ..."
   stack = ops.create_stack(config['stack'])
-  stack.grant_full_access   # grant ssh/sudo
+  stack.grant_full_access   # grant ssh/sudo TODO: make configurable
   layers = []
   config['layers'].each do |l|
     layer_aws_config = l['config']
@@ -41,8 +41,11 @@ def bootstrap_stack(ops, config, input, start_instances, attach_elb=true)
       layer.create_instance(i)
     end
     layers.push(layer)
+    if l['elb'] and create_elb
+      stack.create_elb(l['elb'])
+    end
     if l['elb'] and attach_elb
-      layer.attach_elb(l['elb'])
+      layer.attach_elb(l['elb']['name'])
     end
   end
 

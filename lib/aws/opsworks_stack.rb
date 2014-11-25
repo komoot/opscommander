@@ -213,6 +213,27 @@ class OpsWorksStack
     puts "Deployment successful."
   end
 
+  # Creates an elb using this stack's region and vpc settings
+  def create_elb(config)
+    lb_placeholder = @opsworks.elb_client.load_balancers[config['name']]
+    if not lb_placeholder.exists?
+      puts "creating new elb #{config['name']}" if @verbose
+      new_config = {:listeners => config['listeners']}
+      new_config[:availability_zones] = config['availability_zones'] if config['availability_zones']
+      new_config[:subnets] = config['subnets'] if config['subnets']
+      new_config[:security_groups] = config['security_groups'] if config['security_groups']
+      new_config[:scheme] = config['scheme'] if config['scheme']
+      puts new_config
+      @opsworks.elb_client.load_balancers.create(config['name'], new_config)
+      lb_placeholder = @opsworks.elb_client.load_balancers[config['name']]
+      if not lb_placeholder.exists?
+        raise "could not find elb #{config['name']} after creation"
+      end
+    end
+
+    lb_placeholder.configure_health_check(config['health_check'])
+  end
+
   private
 
   def deployment_finished?(status)

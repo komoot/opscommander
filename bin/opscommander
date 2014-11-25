@@ -27,6 +27,7 @@ command :bootstrap do |c|
   c.option '--application-version [version]', String, 'optional application version.'
   c.option '--cookbooks-version [version]', String, 'optional cookbooks version.' 
   c.option '--start', 'Start all instances after creation. Default: false.'
+  c.option '--create-elbs', 'Create elastic loadbalancers if necessary. Default: false.'
   c.action do |args, options|
     if not options.config_file
       report_error 'Please specify the path to a stack definition yaml file.'
@@ -34,7 +35,8 @@ command :bootstrap do |c|
 
     options.default \
       :environment => 'beta',
-      :start => false
+      :start => false,
+      :create_elbs => false
 
     ops = connect(options.verbose)
     input = open_input(options.yes)
@@ -47,7 +49,7 @@ command :bootstrap do |c|
 
     configuration = load_config(options.config_file, config)
 
-    bootstrap(ops, configuration, options.start, input)
+    bootstrap(ops, configuration, options.start, input, options.create_elbs)
   end
 end
 
