@@ -13,7 +13,7 @@ Gem::Specification.new do |s|
   s.description = %q{Scripting for AWS OpsWorks}
 
   s.add_runtime_dependency "commander", "~>4.2"
-  s.add_runtime_dependency "aws-sdk", "~>1.0"
+  s.add_runtime_dependency "aws-sdk", "~>1.59"
 
   s.files         = `git ls-files`.split("\n")
   s.test_files    = `git ls-files -- {test,spec}/*`.split("\n")
