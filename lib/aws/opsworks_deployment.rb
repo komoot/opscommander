@@ -1,5 +1,3 @@
-require 'pry'
-
 class OpsWorksDeployment
 
   def initialize(stack, deployment)

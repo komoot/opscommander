@@ -1,13 +1,16 @@
 require 'pry'
 require 'erb'
+require 'base64'
+require 'poll'
+
 require_relative '../console.rb'
 
 #
 # Bootstraps a stack. 
 #
 def bootstrap(aws_connection, config, start_instances, input, create_elb=false)
-  if config.has_key?('plain-ec2')
-    bootstrap_plainec2(aws_connection, config['plain-ec2'], start_instances, input, create_elb)
+  if config.has_key?(:plain_ec2)
+    bootstrap_plainec2(aws_connection, config[:plain_ec2], start_instances, input, create_elb)
   else
     bootstrap_opsworks(aws_connection, config, start_instances, input, create_elb)
   end
@@ -103,48 +106,69 @@ def bootstrap_plainec2(aws_connection, config, start_instances, input, create_el
   as_client = Aws::AutoScaling::Client.new
 
   existing_group = as_client.describe_auto_scaling_groups({
-        :auto_scaling_group_names => ["#{config['name']}"],
-        :max_records => 1
-     }).first
+        :auto_scaling_group_names => [config[:autoscaling_group][:auto_scaling_group_name]]
+     })[:auto_scaling_groups].first
 
   if existing_group
-    if input.choice("An autoscaling group '#{config['name']}' already exists. Do you want to delete it or abort?", "da") == 'a'
+    if input.choice("An autoscaling group '#{existing_group['auto_scaling_group_name']}' already exists. Do you want to delete it or abort?", "da") == 'a'
       exit 1
     end
 
-    existing_launch_configuration = as_client.describe_launch_configurations({
-        :launch_configuration_names => existing_group['launch_configuration']
-        }).first
-    
-    if existing_launch_configuration
-      as_client.delete_launch_configuration({
-          :launch_configuration_names => existing_group['launch_configuration']
-          }) 
-    end
-
     as_client.delete_auto_scaling_group({
-        :auto_scaling_group_name => config['name'],
-        :force_delete: true
+        :auto_scaling_group_name => config[:name],
+        :force_delete => true
       })
 
+    puts "waiting for #{config[:autoscaling_group][:auto_scaling_group_name]} to shut down..."
+    Poll.poll(10*60, 5) do
+      group = as_client.describe_auto_scaling_groups({
+        :auto_scaling_group_names => [config[:autoscaling_group][:auto_scaling_group_name]]
+      })[:auto_scaling_groups].first
+      success = (group.nil?)
+    end
+    puts "...done"
     # wait ...
   end
 
-  lconfig = config['autoscaling-group']['launch_configuration']
-  lconfig['launch_configuration_name'] = config['name']
+  # always delete launch configuration (might be from a failed bootstrap before)
+  existing_launch_configuration = as_client.describe_launch_configurations({
+      :launch_configuration_names => [config[:launch_configuration][:launch_configuration_name]]
+      })[:launch_configurations].first
+  
+  if existing_launch_configuration
+    as_client.delete_launch_configuration({
+        :launch_configuration_name => config[:launch_configuration][:launch_configuration_name]
+        }) 
+  end
+
+  puts "creating launch-config '#{config[:launch_configuration][:launch_configuration_name]}' and autoscaling-group '#{config[:autoscaling_group][:auto_scaling_group_name]}'..."
+  lconfig = config[:launch_configuration]
+  lconfig[:user_data] = Base64.encode64(open(lconfig[:user_data]).read)
   as_client.create_launch_configuration(lconfig)
 
-  asconfig = config['autoscaling-group']
-  asconfig.remove('launch_configuration_name')
-  asconfig.remove('loadbalancer')
-  asconfig['load_balancer_names'] = [config['name']]
-
   if not start_instances
-    asconfig['min_size'] = 0
-    asconfig['max_size'] = 0
+    config[:autoscaling_group][:min_size] = 0
+    config[:autoscaling_group][:max_size] = 0
+    config[:autoscaling_group][:desired_capacity] = 0
+  end
 
-  as_client.create_auto_scaling_group(asconfig)
+  as_client.create_auto_scaling_group(config[:autoscaling_group])
 
+  if start_instances
+    puts "waiting for instances in '#{config[:autoscaling_group][:auto_scaling_group_name]}' to boot..."
+
+    Poll.poll(45*60, @verbose ? 5 : 15) do
+      instances = as_client.describe_auto_scaling_groups({
+        :auto_scaling_group_names => [config[:autoscaling_group][:auto_scaling_group_name]]
+      })[:auto_scaling_groups].first[:instances]
+
+      puts " " + instances.map { |i| "(#{i[:instance_id]} #{i[:lifecycle_state]})" }.join(" ") 
+      false
+      #success = check_instances_have_status?(instances, status, allowed_status)
+    end
+    puts "All instances are running."
+  end
   # wait for instances ...
+  puts "done..."
 end
 

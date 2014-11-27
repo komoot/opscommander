@@ -1,7 +1,6 @@
-require "aws-sdk"
 require 'json'
 require_relative "opsworks_stack.rb"
-require_relative "aws_connection.rb"
+require_relative "aws_configuration.rb"
 
 # A wrapper class for {http://docs.aws.amazon.com/AWSRubySDK/latest/AWS/OpsWorks/Client.html}.
 class OpsWorks

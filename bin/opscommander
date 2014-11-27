@@ -3,7 +3,7 @@
 require 'rubygems'
 require 'commander/import'
 
-require "aws/aws_connection.rb"
+require "aws/aws_configuration.rb"
 require 'aws/opsworks.rb'
 require 'commands/bootstrap.rb'
 require 'commands/bluegreen.rb'
@@ -213,7 +213,7 @@ command :whoami do |c|
 end
 
 def connect(verbose)
-  aws_connection = AwsConnection.new
+  aws_connection = AwsConfiguration.new
   aws_connection.verbose = verbose
   return aws_connection
 end
@@ -240,9 +240,11 @@ end
 
 def parse_variables(key_value_list)
   config = {}
-  key_value_list.split(',').each do |kv|
-    parts = kv.strip.split('=')
-    config[parts[0]] = parts[1]
+  if key_value_list
+    key_value_list.split(',').each do |kv|
+      parts = kv.strip.split('=')
+      config[parts[0]] = parts[1]
+    end
   end
   return config
 end

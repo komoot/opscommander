@@ -1,5 +1,3 @@
-require 'pry'
-
 class OpsWorksLayer
   def initialize(stack, layer, verbose)
     @stack = stack

@@ -1,5 +1,3 @@
-require 'pry'
-
 class OpsWorksApp
 
   def initialize(stack, app)
