@@ -31,7 +31,14 @@ def bootstrap_stack(ops, config, input, start_instances, attach_elb=true, create
   # create new stack
   puts "Creating stack #{config['stack']['name']} ..."
   stack = ops.create_stack(config['stack'])
-  stack.grant_full_access   # grant ssh/sudo TODO: make configurable
+
+  if config['permissions']
+    stack.grant_access(config['permissions'])
+  else
+    puts "Warning! No permissions defined in config. Granting full access to everyone."
+    stack.grant_full_access   
+  end
+
   layers = []
   config['layers'].each do |l|
     layer_aws_config = l['config']

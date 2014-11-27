@@ -41,7 +41,29 @@ class OpsWorksStack
     @stack = {:stack_id => stack_id}
   end
 
-  # Grant full ssh/sudo access to all opsworks users
+  # Grant ssh/sudo access to users based on their username.
+  def grant_access(permissions)
+    all_opsworks_arns = @client.describe_permissions({:stack_id => stack_id})[:permissions].collect{|p| p[:iam_user_arn]}
+
+    permissions.each do |user, p|
+      matching_arns = all_opsworks_arns.select{ |arn| arn.end_with? "user/#{user}" }
+
+      if matching_arns.empty?
+        puts "Warning! Could not find user '#{user}' in OpsWorks, so permissions could not be granted."
+      else 
+        arn = matching_arns.first
+        puts "granting stack permissions for user #{arn} ..." if @verbose
+        @client.set_permission({
+          :stack_id => stack_id,
+          :allow_ssh => p['ssh'],
+          :allow_sudo => p['sudo'],
+          :iam_user_arn => arn
+        })
+      end
+    end
+  end
+  # Grant full ssh/sudo access to all opsworks users.
+  # Used as fallback if there are no permissions defined in config.
   def grant_full_access
     permissions = @client.describe_permissions({:stack_id => stack_id})[:permissions]
     permissions.each do |perm|
