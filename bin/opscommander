@@ -23,9 +23,7 @@ command :bootstrap do |c|
   c.syntax = 'opscommander bootstrap [options]'
   c.description = 'Bootstraps a stack from config. Existing Instances/Layers can be deleted.'
   c.option '--config-file [filename]', String, 'path to stack definition yaml file.'
-  c.option '--environment [name]', String, 'environment name (alpha, beta, live, ...). Default: beta.'
-  c.option '--application-version [version]', String, 'optional application version.'
-  c.option '--cookbooks-version [version]', String, 'optional cookbooks version.' 
+  c.option '--variables [key=value,key=value,...]', String, 'optional template variables for the yaml.erb file.'
   c.option '--start', 'Start all instances after creation. Default: false.'
   c.option '--create-elbs', 'Create elastic loadbalancers if necessary. Default: false.'
   c.action do |args, options|
@@ -34,20 +32,13 @@ command :bootstrap do |c|
     end
 
     options.default \
-      :environment => 'beta',
       :start => false,
       :create_elbs => false
 
     ops = connect(options.verbose)
     input = open_input(options.yes)
     
-    config = {
-      :environment => options.environment,
-      :cookbooks_version => options.cookbooks_version,
-      :application_version => options.application_version
-    }
-
-    configuration = load_config(options.config_file, config)
+    configuration = load_config(options.config_file, parse_variables(options.variables))
 
     bootstrap(ops, configuration, options.start, input, options.create_elbs)
   end
@@ -197,19 +188,13 @@ command :cat do |c|
   c.syntax = 'opscommander cat [options]'
   c.description = 'Outputs the parsed yaml config file'
   c.option '--config-file [filename]', String, 'path to stack definition yaml file.'
-  c.option '--environment [name]', String, 'environment name (alpha, beta, live, ...). Default: beta.'
+  c.option '--variables [key=value,key=value,...]', String, 'optional template variables for the yaml.erb file.'
   c.action do |args, options|
     if not options.config_file
       report_error 'Please specify the path to a stack definition yaml file.'
     end
 
-    options.default \
-      :environment => 'beta'
-
-    config = {
-      :environment => options.environment,
-    }
-    puts parse_erb(options.config_file, config)
+    puts parse_erb(options.config_file, parse_variables(options.variables))
   end
 end
 
@@ -248,4 +233,12 @@ def parse_erb(erb_file, config)
   renderer.render(file.read)
 end
 
+def parse_variables(key_value_list)
+  config = {}
+  key_value_list.split(',').each do |kv|
+    parts = kv.strip.split('=')
+    config[parts[0]] = parts[1]
+  end
+  return config
+end
 

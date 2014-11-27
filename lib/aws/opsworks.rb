@@ -87,8 +87,8 @@ class OpsWorks
       instances = @client.describe_instances({:instance_ids => instance_ids})[:instances]
       puts_instance_status(instances)
       success = check_instances_have_status?(instances, status, allowed_status)
-      end
-      puts "All instances are in status #{status}."
+    end
+    puts "All instances are in status #{status}."
   end
 
   # checks if the instances with the given ids have at the moment all the
