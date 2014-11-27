@@ -6,6 +6,17 @@ require_relative '../console.rb'
 # Bootstraps a stack. 
 #
 def bootstrap(aws_connection, config, start_instances, input, create_elb=false)
+  if config.has_key?('plain-ec2')
+    bootstrap_plainec2(aws_connection, config['plain-ec2'], start_instances, input, create_elb)
+  else
+    bootstrap_opsworks(aws_connection, config, start_instances, input, create_elb)
+  end
+end
+
+#
+# Bootstraps an opsworks stack
+#
+def bootstrap_opsworks(aws_connection, config, start_instances, input, create_elb=false)
   ops = OpsWorks.new(aws_connection)
   stack_name = config['stack']['name']
 
@@ -88,4 +99,52 @@ def bootstrap_stack(ops, config, input, start_instances, attach_elb=true, create
   return stack
 end
 
+def bootstrap_plainec2(aws_connection, config, start_instances, input, create_elb)
+  as_client = Aws::AutoScaling::Client.new
+
+  existing_group = as_client.describe_auto_scaling_groups({
+        :auto_scaling_group_names => ["#{config['name']}"],
+        :max_records => 1
+     }).first
+
+  if existing_group
+    if input.choice("An autoscaling group '#{config['name']}' already exists. Do you want to delete it or abort?", "da") == 'a'
+      exit 1
+    end
+
+    existing_launch_configuration = as_client.describe_launch_configurations({
+        :launch_configuration_names => existing_group['launch_configuration']
+        }).first
+    
+    if existing_launch_configuration
+      as_client.delete_launch_configuration({
+          :launch_configuration_names => existing_group['launch_configuration']
+          }) 
+    end
+
+    as_client.delete_auto_scaling_group({
+        :auto_scaling_group_name => config['name'],
+        :force_delete: true
+      })
+
+    # wait ...
+  end
+
+  lconfig = config['autoscaling-group']['launch_configuration']
+  lconfig['launch_configuration_name'] = config['name']
+  as_client.create_launch_configuration(lconfig)
+
+  asconfig = config['autoscaling-group']
+  asconfig.remove('launch_configuration_name')
+  asconfig.remove('loadbalancer')
+  asconfig['load_balancer_names'] = [config['name']]
+
+  if not start_instances
+    asconfig['min_size'] = 0
+    asconfig['max_size'] = 0
+
+  as_client.create_auto_scaling_group(asconfig)
+
+  # wait for instances ...
+end
 
