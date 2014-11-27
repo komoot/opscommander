@@ -3,7 +3,7 @@ require 'erb'
 require_relative '../console.rb'
 
 #
-# Bootstraps a stack. (Currently designed for routing)
+# Bootstraps a stack. 
 #
 def bootstrap(ops, config, start_instances, input, create_elb=false)
   stack_name = config['stack']['name']
