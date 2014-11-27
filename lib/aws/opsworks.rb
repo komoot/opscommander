@@ -55,14 +55,14 @@ class OpsWorks
   #
   # @param stack_config stack configuration
   # @return OpsWorksStack instance
-    def create_stack(stack_config)
-      # if custom_json is set convert it to string
-      if stack_config.has_key?('custom_json')
-        stack_config['custom_json'] = JSON.pretty_generate(stack_config['custom_json'])
-      end
-      if stack_config.has_key?('region') == false or stack_config['region'].nil?
-        stack_config['region'] = AWS.config.region
-      end
+  def create_stack(stack_config)
+    # if custom_json is set convert it to string
+    if stack_config.has_key?('custom_json')
+      stack_config['custom_json'] = JSON.pretty_generate(stack_config['custom_json'])
+    end
+    if stack_config.has_key?('region') == false or stack_config['region'].nil?
+      stack_config['region'] = AWS.config.region
+    end
     stack = @client.create_stack(stack_config)
     return OpsWorksStack.new(self, stack, @verbose)
   end
