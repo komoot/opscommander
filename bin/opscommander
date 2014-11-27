@@ -81,13 +81,17 @@ command :test do |c|
 end
 
 command :delete do |c|
-  c.syntax = 'opscommander delete [options]'
+  c.syntax = 'opscommander delete <stack name>'
   c.description = 'Deletes a stack.'
-  c.option '--stack-name [name]', String, 'stack name.'
   c.action do |args, options|
     ops = connect(options.verbose)
     input = open_input(options.yes)
-    delete(ops, options.stack_name, input)
+
+    if args.length == 0
+      report_error 'Please enter a stack name.'
+    end
+
+    delete(ops, args[0], input)
   end
 end
 
