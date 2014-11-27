@@ -1,7 +1,7 @@
 require 'aws-sdk'
 require 'pry'
+require 'poll'
 
-require_relative '../poll.rb'
 require_relative 'opsworks_layer.rb'
 require_relative 'opsworks_app.rb'
 require_relative 'opsworks_deployment.rb'
