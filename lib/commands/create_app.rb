@@ -1,4 +1,5 @@
-def create_app(ops, configuration, app_name, variables)
+def create_app(aws_connection, configuration, app_name, variables)
+  ops = OpsWorks.new(aws_connection)
   stack_name = configuration['stack']['name']
   stack = ops.find_stack(stack_name)
   config = override_configuration(configuration['apps'][app_name], variables)

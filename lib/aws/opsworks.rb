@@ -1,6 +1,7 @@
 require "aws-sdk"
 require 'json'
 require_relative "opsworks_stack.rb"
+require_relative "aws_connection.rb"
 
 # A wrapper class for {http://docs.aws.amazon.com/AWSRubySDK/latest/AWS/OpsWorks/Client.html}.
 class OpsWorks
@@ -11,28 +12,13 @@ class OpsWorks
 
   attr_reader :elb_client
   
-  def initialize(client=nil, region='eu-west-1', verbose=false)
-    @verbose = verbose
-    if not client
-      # create OpsWorks client. Region is the API endpoint.
-      @client = AWS::OpsWorks::Client.new({:region => 'us-east-1'})
-      AWS.config({:region => region})
-    else
-      @client = client
-    end
+  def initialize(aws_connection)
+    @verbose = aws_connection.verbose
+    @client = AWS::OpsWorks::Client.new({:region => 'us-east-1'})
     @elb_client = AWS::ELB.new
-    whoami if @verbose
   end
 
   public
-
-  # Print the current aws authentication data
-  def whoami
-    client = AWS::IAM::Client.new
-    user = client.get_user()[:user]
-    puts "Current AWS user name is #{user[:user_name]} with access key #{user[:user_id]}"
-    puts "Connected to region #{AWS.config.region}"
-  end
 
   # Searches the stack with the given name
   #

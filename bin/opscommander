@@ -3,6 +3,7 @@
 require 'rubygems'
 require 'commander/import'
 
+require "aws/aws_connection.rb"
 require 'aws/opsworks.rb'
 require 'commands/bootstrap.rb'
 require 'commands/bluegreen.rb'
@@ -212,9 +213,9 @@ command :whoami do |c|
 end
 
 def connect(verbose)
-  ops = OpsWorks.new
-  ops.verbose = verbose
-  return ops
+  aws_connection = AwsConnection.new
+  aws_connection.verbose = verbose
+  return aws_connection
 end
 
 def report_error(message)

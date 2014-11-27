@@ -4,8 +4,8 @@ require_relative '../console.rb'
 # 
 #
 # The deployment process is designed as failsafe and fault tolerant as possible. It can recover from broken earlier deploys.
-def bluegreen(ops, configuration, input, layer_filter=nil)
-
+def bluegreen(aws_connection, configuration, input, layer_filter=nil)
+  ops = OpsWorks.new(aws_connection)
   stack_name = configuration['stack']['name']
 
   # is there still a blue stack?

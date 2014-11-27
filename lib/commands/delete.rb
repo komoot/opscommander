@@ -1,7 +1,8 @@
 #
 # Deletes a stack.
 #
-def delete(ops, stack_name, input)
+def delete(aws_connection, stack_name, input)
+  ops = OpsWorks.new(aws_connection)
   # check if stack already exists
   existing_stack = ops.find_stack stack_name
   if existing_stack
