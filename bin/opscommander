@@ -40,6 +40,10 @@ command :bootstrap do |c|
     
     configuration = load_config(options.config_file, parse_variables(options.variables))
 
+    require 'pp'
+    pp configuration
+    exit
+
     bootstrap(ops, configuration, options.start, input, options.create_elbs)
   end
 end
@@ -156,7 +160,7 @@ command :deploy_app do |c|
   end
 end
 command :bluegreen do |c|
-  c.syntax = 'opscommander blue-green [options]'
+  c.syntax = 'opscommander bluegreen [options]'
   c.description = 'Deploys a new version by starting new blue layers and switching elbs afterwards.'
   c.option '--config-file [filename]', String, 'path to stack definition yaml file.'
   c.option '--environment [name]', String, 'environment name (alpha, beta, live, ...). Default: beta.'
