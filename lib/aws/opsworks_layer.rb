@@ -40,7 +40,7 @@ class OpsWorksLayer
 
   # sends a stop signal to all instances in this layer
   def send_stop
-    disable_autoscaling()
+    disable_load_based_auto_scaling()
     ids = []
       get_instances().each do |i|
         @client.stop_instance({:instance_id => i[:instance_id]})
@@ -118,9 +118,20 @@ class OpsWorksLayer
     @client.describe_instances({:layer_id => @layer[:layer_id]})[:instances]
   end
 
+  # Sets and enables a load-based auto scaling configuration.
+  def enable_load_based_auto_scaling(config) 
+    puts "Enabling load-based auto scaling for layer '#{name}'"
+    @client.set_load_based_auto_scaling({
+      :layer_id => layer_id,
+      :enable => true,
+      :up_scaling => config['up_scaling'],
+      :down_scaling => config['down_scaling']
+    })
+  end
+
   private
 
-  def disable_autoscaling
+  def disable_load_based_auto_scaling
       autoscaling_setup = @client.describe_load_based_auto_scaling({:layer_ids => [layer_id]})[:load_based_auto_scaling_configurations]
       autoscaling_setup.each do |as|
       if as[:enable]
