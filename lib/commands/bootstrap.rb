@@ -48,12 +48,12 @@ def bootstrap_stack(ops, config, input, start_instances, attach_elb=true, create
       layer.create_instance(i)
     end
     layers.push(layer)
-    if l['elb'] and create_elb
-      stack.create_elb(l['elb'])
+
+    stack.create_elb(l['elb']) if l['elb'] and create_elb
+    layer.attach_elb(l['elb']['name']) if l['elb'] and attach_elb
+
     end
-    if l['elb'] and attach_elb
-      layer.attach_elb(l['elb']['name'])
-    end
+
   end
 
   config['apps'].each do |a, config|
