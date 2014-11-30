@@ -39,7 +39,7 @@ command :bootstrap do |c|
     ops = connect(options.verbose)
     input = open_input(options.yes)
     
-    configuration = load_config(options.config_file, parse_variables(options.variables))
+    configuration = load_config(options.config_file, parse_variables(options.variables, options.verbose))
 
     require 'pp'
     pp configuration
@@ -233,17 +233,17 @@ end
 
 def parse_erb(erb_file, config)
   # read config erb file
-  file = File.open(erb_file, "rb")
-  renderer = ErbHash.new(config)
-  renderer.render(file.read)
+  renderer = ErbHash.new(erb_file, config)
+  renderer.render()
 end
 
-def parse_variables(key_value_list)
+def parse_variables(key_value_list, verbose=false)
   config = {}
   if key_value_list
     key_value_list.split(',').each do |kv|
       parts = kv.strip.split('=')
       config[parts[0]] = parts[1]
+      puts parts[0] + "='" + parts[1] + "'" if verbose
     end
   end
   return config

@@ -10,6 +10,7 @@ require_relative '../console.rb'
 #
 def bootstrap(aws_connection, config, start_instances, input, create_elb=false)
   if config.has_key?(:plain_ec2)
+    # experimental feature: set up a plain ec2 stack using autoscaling and launch configurations
     bootstrap_plainec2(aws_connection, config[:plain_ec2], start_instances, input, create_elb)
   else
     bootstrap_opsworks(aws_connection, config, start_instances, input, create_elb)
@@ -102,8 +103,18 @@ def bootstrap_stack(ops, config, input, start_instances, attach_elb=true, create
   return stack
 end
 
+#
+# Bootstrap a plain ec2 stack using autoscaling and launch configurations
+# experimental feature
+# TODO: create a aws lib once the use case is settled.
+#
 def bootstrap_plainec2(aws_connection, config, start_instances, input, create_elb)
   as_client = Aws::AutoScaling::Client.new
+  elb_client = Aws::ElasticLoadBalancing::Client.new
+  
+
+
+  raise "missing 'auto_scaling_group_name'" if not config[:autoscaling_group][:auto_scaling_group_name]
 
   existing_group = as_client.describe_auto_scaling_groups({
         :auto_scaling_group_names => [config[:autoscaling_group][:auto_scaling_group_name]]
@@ -115,18 +126,19 @@ def bootstrap_plainec2(aws_connection, config, start_instances, input, create_el
     end
 
     as_client.delete_auto_scaling_group({
-        :auto_scaling_group_name => config[:name],
+        :auto_scaling_group_name => config[:autoscaling_group][:auto_scaling_group_name],
         :force_delete => true
       })
 
-    puts "waiting for #{config[:autoscaling_group][:auto_scaling_group_name]} to shut down..."
+    puts "waiting for #{config[:autoscaling_group][:auto_scaling_group_name]} to be deleted"
     Poll.poll(10*60, 5) do
+      print "."
       group = as_client.describe_auto_scaling_groups({
         :auto_scaling_group_names => [config[:autoscaling_group][:auto_scaling_group_name]]
       })[:auto_scaling_groups].first
       success = (group.nil?)
     end
-    puts "...done"
+    puts " done"
     # wait ...
   end
 
@@ -143,7 +155,7 @@ def bootstrap_plainec2(aws_connection, config, start_instances, input, create_el
 
   puts "creating launch-config '#{config[:launch_configuration][:launch_configuration_name]}' and autoscaling-group '#{config[:autoscaling_group][:auto_scaling_group_name]}'..."
   lconfig = config[:launch_configuration]
-  lconfig[:user_data] = Base64.encode64(open(lconfig[:user_data]).read)
+  lconfig[:user_data] = parse_userdata(lconfig[:user_data])
   as_client.create_launch_configuration(lconfig)
 
   if not start_instances
@@ -155,20 +167,84 @@ def bootstrap_plainec2(aws_connection, config, start_instances, input, create_el
   as_client.create_auto_scaling_group(config[:autoscaling_group])
 
   if start_instances
+    if not config[:autoscaling_group][:desired_capacity] > 0
+      raise "illegal value for desired_capacity #{config[:autoscaling_group][:desired_capacity]}"
+    end
     puts "waiting for instances in '#{config[:autoscaling_group][:auto_scaling_group_name]}' to boot..."
-
     Poll.poll(45*60, @verbose ? 5 : 15) do
       instances = as_client.describe_auto_scaling_groups({
         :auto_scaling_group_names => [config[:autoscaling_group][:auto_scaling_group_name]]
       })[:auto_scaling_groups].first[:instances]
 
-      puts " " + instances.map { |i| "(#{i[:instance_id]} #{i[:lifecycle_state]})" }.join(" ") 
-      false
-      #success = check_instances_have_status?(instances, status, allowed_status)
+      success = false
+      if instances.length == 0
+        print " waiting for instances ...\r"
+      else
+        print " " + instances.map { |i| "(#{i[:instance_id]} #{i[:lifecycle_state]}" }.join(" ") + "\r"
+        success = check_instances_have_state?(instances.map{|i| i[:lifecycle_state]}, "InService")
+      end
+      success
     end
+
+    elb = config[:autoscaling_group][:load_balancer_names].first
+    if elb
+      puts "waiting for instances to be healty in elb '#{elb}'"
+      Poll.poll(45*60, @verbose ? 5 : 15) do
+        instances = elb_client.describe_instance_health({ :load_balancer_name => elb })[:instance_states]
+
+        success = false
+        if instances.length == 0
+          print " no instances in elb...\r"
+        else
+          print " " + instances.map { |i| "(#{i[:instance_id]} #{i[:state]}" }.join(" ") + "\r"
+          success = check_instances_have_state?(instances.map{|i| i[:state]}, "InService")
+        end
+        success
+      end
+    end
+
+    print "\n"
     puts "All instances are running."
   end
   # wait for instances ...
   puts "done..."
+end
+
+# takes a list of user data files and creates a base64 encoded multipart message
+def parse_userdata(files)
+  content = "Content-Type: multipart/mixed; boundary=\"===============7530540225998998152==\"\nMIME-Version: 1.0\n\n"
+  files.each do |file|
+    content += "--===============7530540225998998152==\n"
+    raise "missing content_type" if not file[:content_type]
+    raise "missing content" if not file[:content]
+    raise "missing filename" if not file[:filename]
+    content += "Content-Type: #{file[:content_type]}; charset=\"us-ascii\"\n"
+    content += "MIME-Version: 1.0\n"
+    content += "Content-Transfer-Encoding: 7bit\n"
+    content += "Content-Disposition: attachment; filename=\"#{file[:filename]}\"\n\n"
+    content += "#{file[:content]}\n"
+  end
+  content += "--===============7530540225998998152==--\n"
+  return Base64.encode64(content)
+end
+
+# checks that all states in 'instance_states' are in success_status
+# raise an excpetion if all states or not in 'allowed_status'
+def check_instances_have_state?(instance_states, success_status, allowed_states=nil, input=nil)
+  success = 0
+  failed = 0
+    instance_states.each do |i|
+      if i == success_status
+        success += 1
+      elsif not allowed_status.nil? and not allowed_states.include?(i)
+        failed += 1
+      end
+    end
+
+    if instance_states.length == failed
+    raise "all instanes are in a failed state."
+  else
+      return instances.length == success
+  end
 end
 
