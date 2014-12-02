@@ -13,6 +13,8 @@ $> gem install opscommander-0.1.0.gem
 ### Run without installing
 
 ```
+$> sudo gem install bundler
+$> bundle install
 $> ruby -Ilib bin/opscommander ... 
 ```
 
