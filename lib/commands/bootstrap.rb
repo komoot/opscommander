@@ -44,7 +44,7 @@ end
 def validate_load_based_auto_scaling_config(config, layer_config) 
   raise "Key 'load_based_auto_scaling' not found in configuration!" if not config['load_based_auto_scaling'] 
   lb_config_name = layer_config['load_based_auto_scaling']['config']
-  raise "No load-based configuration with the name '#{}' found!" if not config['load_based_auto_scaling'][lb_config_name]
+  raise "No load-based configuration with the name '#{lb_config_name}' found!" if not config['load_based_auto_scaling'][lb_config_name]
   
   instances = layer_config['instances'].select{|i| i['auto_scaling_type'].eql? 'load'}
   raise "Load-based auto scaling was enabled but no 'load' instances defined!" if instances.empty?
