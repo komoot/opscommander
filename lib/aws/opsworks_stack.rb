@@ -161,6 +161,7 @@ class OpsWorksStack
 
   # Create an app.
   def create_app(name, config)
+    puts "creating app #{name} ..." if @verbose
     begin 
       existing_app = get_app(name)
       existing_app.delete()

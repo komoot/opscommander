@@ -85,7 +85,7 @@ def bootstrap_stack(ops, config, input, start_instances, attach_elb=true, create
 
   end
 
-  config['apps'].each do |a, config|
+  config['apps'].each do |a, value|
     stack.create_app(a, config)
   end
 
