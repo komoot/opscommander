@@ -1,4 +1,3 @@
-require 'pry'
 require 'erb'
 require 'base64'
 require 'poll'
