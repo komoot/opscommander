@@ -1,9 +1,8 @@
 require_relative '../console.rb'
 
-# Performs a blue-green deployment of a stack by cloning it
-# 
-#
+# Performs a blue-green deployment of a stack by cloning it.
 # The deployment process is designed as failsafe and fault tolerant as possible. It can recover from broken earlier deploys.
+#
 def bluegreen(aws_connection, configuration, input, layer_filter=nil)
   ops = OpsWorks.new(aws_connection)
   stack_name = configuration['stack']['name']
@@ -33,7 +32,7 @@ def bluegreen(aws_connection, configuration, input, layer_filter=nil)
     puts "Stack #{stack_name} not found."
     exit 1
   end
-  plan_stack = nil # not needed anymore, fail early
+  plain_stack = nil # not needed anymore, fail early
 
   # Configure a blue stack
   blue_configuration = {
