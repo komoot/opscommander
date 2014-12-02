@@ -24,7 +24,7 @@ command :bootstrap do |c|
   c.syntax = 'opscommander bootstrap [options]'
   c.description = 'Bootstraps a stack from config. Existing Instances/Layers can be deleted.'
   c.option '--config-file [filename]', String, 'path to stack definition yaml file.'
-  c.option '--variables [key=value,key=value,...]', String, 'optional template variables for the yaml.erb file.'
+  c.option '--variables [key=value,key=value,...]', String, 'optional template variables for the yaml file.'
   c.option '--start', 'Start all instances after creation. Default: false.'
   c.option '--create-elbs', 'Create elastic loadbalancers if necessary. Default: false.'
   c.action do |args, options|
@@ -49,10 +49,7 @@ command :test do |c|
   c.syntax = 'opscommander test [options]'
   c.description = 'Tests a stack configuration file with Test Kitchen. Sequentially loads all layers and starts one instance with \'kitchen\'.'
   c.option '--config-file [filename]', String, 'path to stack definition yaml file.'
-  c.option '--environment [name]', String, 'environment name (alpha, beta, live, ...). Default: beta.'
-  c.option '--application-version [version]', String, 'optional application version.'
-  c.option '--cookbooks-version [version]', String, 'optional cookbooks version.' 
-  c.option '--filter filter', 'Filter layers by name.'
+  c.option '--variables [key=value,key=value,...]', String, 'optional template variables for the yaml file.'
   c.action do |args, options|
     if not options.config_file
       report_error 'Please specify the path to a stack definition yaml file.'
@@ -62,12 +59,7 @@ command :test do |c|
       :environment => 'beta'
 
     input = open_input(options.yes)
-    config = {
-      :environment => options.environment,
-      :cookbooks_version => options.cookbooks_version,
-      :application_version => options.application_version
-    }
-    configuration = load_config(options.config_file, config)
+    configuration = load_config(options.config_file, parse_variables(options.variables, options.verbose))
     vagrant_test(configuration)
   end
 end
@@ -91,16 +83,12 @@ command :create_app do |c|
   c.syntax = 'opscommander create_app [options] <name>'
   c.description = 'Creates an application, overwriting any old one with the same name. The app must be defined in the stack definition yaml file.'
   c.option '--config-file [filename]', String, 'path to stack definition yaml file.'
-  c.option '--environment [environment]', String, 'environment name (alpha, beta, live, ...). Default: beta.'
-  c.option '--variables [key=value,key=value,...]', String, 'optionally set environment variables, or override if already set in yaml file.'
+  c.option '--variables [key=value,key=value,...]', String, 'optional template variables for the yaml file.'
   c.action do |args, options|
 
     if not options.config_file
       report_error 'Please specify the path to a stack definition yaml file.'
     end
-
-    options.default \
-      :environment => 'beta'
 
     if args.length == 0
       report_error 'Please enter an app name.'
@@ -109,7 +97,7 @@ command :create_app do |c|
     app_name = args[0]
 
     ops = connect(options.verbose)
-    configuration = load_config(options.config_file, :environment => options.environment)
+    configuration = load_config(options.config_file, parse_variables(options.variables, options.verbose))
 
     if not configuration['apps']
       report_error "No apps defined in the stack definition yaml."
@@ -119,7 +107,7 @@ command :create_app do |c|
       report_error "The app '#{app_name}' is not defined in the stack definition yaml."
     end
 
-    create_app(ops, configuration, app_name, options.variables)
+    create_app(ops, configuration, app_name)
   end
 end
 
@@ -127,14 +115,11 @@ command :deploy_app do |c|
   c.syntax = 'opscommander deploy_app [options] <name>'
   c.description = 'Deploys an application. The app must be defined in the stack definition yaml file and it must exist in OpsWorks (see create_app).'
   c.option '--config-file [filename]', String, 'path to stack definition yaml file.'
-  c.option '--environment [environment]', String, 'environment name (alpha, beta, live, ...). Default: beta.'
+  c.option '--variables [key=value,key=value,...]', String, 'optional template variables for the yaml file.'
   c.action do |args, options|
     if not options.config_file
       report_error 'Please specify the path to a stack definition yaml file.'
     end
-
-    options.default \
-      :environment => 'beta'
 
     if args.length == 0
       report_error 'Please enter an app name.'
@@ -143,7 +128,7 @@ command :deploy_app do |c|
     app_name = args[0]
 
     ops = connect(options.verbose)
-    configuration = load_config(options.config_file, :environment => options.environment)
+    configuration = load_config(options.config_file, parse_variables(options.variables, options.verbose))
 
     if not configuration['apps']
       report_error "No apps defined in the stack definition yaml."
@@ -160,30 +145,18 @@ command :bluegreen do |c|
   c.syntax = 'opscommander bluegreen [options]'
   c.description = 'Deploys a new version by starting new blue layers and switching elbs afterwards.'
   c.option '--config-file [filename]', String, 'path to stack definition yaml file.'
-  c.option '--environment [name]', String, 'environment name (alpha, beta, live, ...). Default: beta.'
-  c.option '--application-version [version]', String, 'optional application version.'
-  c.option '--cookbooks-version [version]', String, 'optional cookbooks version.' 
+  c.option '--variables [key=value,key=value,...]', String, 'optional template variables for the yaml file.'
   c.action do |args, options|
     if not options.config_file
       report_error 'Please specify the path to a stack definition yaml file.'
     end
 
-    options.default \
-      :environment => 'beta'
-
     ops = connect(options.verbose)
     input = open_input(options.yes)
-    config = {
-      :environment => options.environment,
-      :cookbooks_version => options.cookbooks_version,
-      :application_version => options.application_version
-    }
-    configuration = load_config(options.config_file, config)
+    configuration = load_config(options.config_file, parse_variables(options.variables, options.verbose))
     bluegreen(ops, configuration, input)
   end
 end
-
-# TODO: :inplace command for (re-)deployment with downtime
 
 command :cat do |c|
   c.syntax = 'opscommander cat [options]'
