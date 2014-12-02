@@ -160,7 +160,7 @@ class OpsWorksStack
   end
 
   # Create an app.
-  def create_app(name, options)
+  def create_app(name, config)
     begin 
       existing_app = get_app(name)
       existing_app.delete()
@@ -169,9 +169,11 @@ class OpsWorksStack
       # no app exists with the same name
     end
 
+    options = config['apps'][name]
     # remap environment from our configuration style to OpsWorks' 
+    
     options['environment'] = options['environment'].collect{ |k, v|
-      {'key' => k, 'value' => v}
+      {'key' => "#{k}", 'value' => "#{v}"}
     }
 
     options['name'] = name
