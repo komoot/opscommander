@@ -41,10 +41,6 @@ command :bootstrap do |c|
     
     configuration = load_config(options.config_file, parse_variables(options.variables, options.verbose))
 
-    require 'pp'
-    pp configuration
-    exit
-
     bootstrap(ops, configuration, options.start, input, options.create_elbs)
   end
 end
