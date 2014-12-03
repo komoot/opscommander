@@ -11,7 +11,12 @@ class ErbHash < OpenStruct
 
   # renders the template
   def render
-    content = File.read(File.expand_path(@filename))
+    if File.file?(File.expand_path(@filename))
+      content = File.read(File.expand_path(@filename))
+    else
+      content = @filename
+    end
+
     t = ERB.new(content)
     t.result(binding)
   end

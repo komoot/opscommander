@@ -13,7 +13,7 @@ require 'commands/deploy_app.rb'
 
 require 'vagrant/vagrant.rb'
 
-require 'utils.rb'
+require 'config.rb'
 
 program :version, '0.0.1'
 program :description, 'Manages bootstrapping, configuration and deployment of OpsWorks stacks'
@@ -39,7 +39,7 @@ command :bootstrap do |c|
     ops = connect(options.verbose)
     input = open_input(options.yes)
     
-    configuration = load_config(options.config_file, parse_variables(options.variables, options.verbose))
+    configuration = OpsWorksConfig.load(options.config_file, parse_variables(options.variables, options.verbose))
 
     bootstrap(ops, configuration, options.start, input, options.create_elbs)
   end
@@ -59,7 +59,7 @@ command :test do |c|
       :environment => 'beta'
 
     input = open_input(options.yes)
-    configuration = load_config(options.config_file, parse_variables(options.variables, options.verbose))
+    configuration = OpsWorksConfig.load(options.config_file, parse_variables(options.variables, options.verbose))
     vagrant_test(configuration)
   end
 end
@@ -97,7 +97,7 @@ command :create_app do |c|
     app_name = args[0]
 
     ops = connect(options.verbose)
-    configuration = load_config(options.config_file, parse_variables(options.variables, options.verbose))
+    configuration = OpsWorksConfig.load(options.config_file, parse_variables(options.variables, options.verbose))
 
     if not configuration['apps']
       report_error "No apps defined in the stack definition yaml."
@@ -128,7 +128,7 @@ command :deploy_app do |c|
     app_name = args[0]
 
     ops = connect(options.verbose)
-    configuration = load_config(options.config_file, parse_variables(options.variables, options.verbose))
+    configuration = OpsWorksConfig.load(options.config_file, parse_variables(options.variables, options.verbose))
 
     if not configuration['apps']
       report_error "No apps defined in the stack definition yaml."
@@ -153,7 +153,7 @@ command :bluegreen do |c|
 
     conn = connect(options.verbose)
     input = open_input(options.yes)
-    configuration = load_config(options.config_file, parse_variables(options.variables, options.verbose))
+    configuration = OpsWorksConfig.load(options.config_file, parse_variables(options.variables, options.verbose))
     bluegreen(OpsWorks.new(conn), configuration, input)
   end
 end
@@ -194,16 +194,6 @@ end
 
 def open_input(yes)
   Console.new(yes)
-end
-
-def load_config(yaml_file, config)
-  config = YAML.load(parse_erb(yaml_file, config))
-end
-
-def parse_erb(erb_file, config)
-  # read config erb file
-  renderer = ErbHash.new(erb_file, config)
-  renderer.render()
 end
 
 def parse_variables(key_value_list, verbose=false)
