@@ -28,9 +28,7 @@ def bluegreen(ops, configuration, input, layer_filter=nil)
     plain_stack.rename_to(stack_name + "-green")
     green_stack = plain_stack
     plain_stack = nil # not needed anymore, fail early
-  end 
-
-  if green_stack
+  elsif green_stack
     if green_stack.supports_bluegreen_deployment?(configuration) == false
       puts "Found stack #{stack_name}-green, but it doesn't support blue-green deployment with the given configuration."
       exit 1
