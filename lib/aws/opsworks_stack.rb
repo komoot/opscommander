@@ -110,6 +110,15 @@ class OpsWorksStack
     layers.map{|l| OpsWorksLayer.new(self, l, @verbose)}
   end
 
+  def find_layer_by_name(name) 
+    layers = @client.describe_layers({:stack_id => stack_id()})[:layers]
+    layers = layers.select{|l| l[:shortname].eql? name}
+    if layers.empty?
+      raise "Couldn't find layer with name #{name}!"
+    end
+    OpsWorksLayer.new(self, layers.first, @verbose)
+  end
+
   #
   # Returns all elastic load balancers registered with layers in this stack
   def find_elbs
@@ -236,6 +245,18 @@ class OpsWorksStack
     puts "Deployment successful."
   end
 
+  # Returns the name of the ELB associated with the given layer, or nil
+  def find_elb_for_layer(layer_name) 
+    layer = find_layer_by_name(layer_name)
+    opsworks_elbs = @client.describe_elastic_load_balancers({:layer_ids => [layer.layer_id]})[:elastic_load_balancers]
+
+    if opsworks_elbs.empty?
+      return nil
+    end
+
+    opsworks_elbs.first[:elastic_load_balancer_name]
+  end
+
   # Creates an elb using this stack's region and vpc settings
   def create_elb(config)
     lb_placeholder = @opsworks.elb_client.load_balancers[config['name']]
@@ -255,6 +276,23 @@ class OpsWorksStack
     end
 
     lb_placeholder.configure_health_check(config['health_check'])
+  end
+
+  # Returns true if the stack supports blue-green deployment with the given configuration. 
+  # There are three supported modes:
+  #  - manual (nothing defined in YAML, layers need to have ELBs defined manually)
+  #  - named (ELB is named in YAML and must exist in EC2)
+  #  - automatic (ELB is named and specified in YAML, will be created if it doesn't exist)
+  def supports_bluegreen_deployment?(config)
+    config['layers'].each do |layer| 
+      if not layer['elb'] 
+        # manual
+        return find_elb_for_layer(layer['config']['shortname']) != nil
+      else
+        # named or automatic
+        return layer['elb']['name'].length > 0
+      end
+    end
   end
 
   private
