@@ -10,16 +10,19 @@ def bluegreen(ops, configuration, input, layer_filter=nil)
   green_stack = ops.find_stack(stack_name + "-green")
 
   if !green_stack and !plain_stack
-    raise "Stack #{stack_name} not found."
+    puts "Stack #{stack_name} not found."
+    exit 1
   end
     
   if green_stack and plain_stack
-    raise "Found both #{stack_name} and #{stack_name}-green, cannot decide which is live. This is fatal. Manually delete the stack you don't need."
+    puts "Found both #{stack_name} and #{stack_name}-green, cannot decide which is live. This is fatal. Manually delete the stack you don't need."
+    exit 1
   end 
 
   if plain_stack 
     if plain_stack.supports_bluegreen_deployment?(configuration) == false 
-      raise "Stack #{stack_name} doesn't support blue-green deployment with the given configuration."
+      puts "Stack #{stack_name} doesn't support blue-green deployment with the given configuration."
+      exit 1
     end
 
     plain_stack.rename_to(stack_name + "-green")
