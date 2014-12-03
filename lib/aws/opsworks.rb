@@ -94,10 +94,9 @@ class OpsWorks
       if instances.length == failed
       raise "all instanes are in a failed state."
     else
-        return instances.length == success
-      end
+      return instances.length == success
     end
-
+  end
 
   def puts_instance_status(insts)
     if(insts.length > 0)
