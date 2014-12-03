@@ -21,8 +21,7 @@ def bluegreen(ops, configuration, input, layer_filter=nil)
 
   if plain_stack 
     if plain_stack.supports_bluegreen_deployment?(configuration) == false 
-      puts "Stack #{stack_name} doesn't support blue-green deployment with the given configuration."
-      exit 1
+      raise "Stack #{stack_name} doesn't support blue-green deployment with the given configuration."
     end
 
     plain_stack.rename_to(stack_name + "-green")
