@@ -151,10 +151,10 @@ command :bluegreen do |c|
       report_error 'Please specify the path to a stack definition yaml file.'
     end
 
-    ops = connect(options.verbose)
+    conn = connect(options.verbose)
     input = open_input(options.yes)
     configuration = load_config(options.config_file, parse_variables(options.variables, options.verbose))
-    bluegreen(ops, configuration, input)
+    bluegreen(OpsWorks.new(conn), configuration, input)
   end
 end
 
