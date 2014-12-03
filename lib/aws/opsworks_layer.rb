@@ -1,7 +1,7 @@
 class OpsWorksLayer
   def initialize(stack, layer, verbose)
     @stack = stack
-    @client = stack.opsworks.client #convenience
+    @client = stack.opsworks.client if stack   # Convenience
     @layer = layer
     @verbose = verbose
   end
