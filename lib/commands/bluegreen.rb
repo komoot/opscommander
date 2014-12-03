@@ -3,11 +3,37 @@ require_relative '../console.rb'
 # Performs a blue-green deployment of a stack by cloning it.
 # The deployment process is designed as failsafe and fault tolerant as possible. It can recover from broken earlier deploys.
 #
-def bluegreen(aws_connection, configuration, input, layer_filter=nil)
-  ops = OpsWorks.new(aws_connection)
+def bluegreen(ops, configuration, input, layer_filter=nil)
   stack_name = configuration['stack']['name']
 
-  # is there still a blue stack?
+  plain_stack = ops.find_stack(stack_name)
+  green_stack = ops.find_stack(stack_name + "-green")
+
+  if !green_stack and !plain_stack
+    raise "Stack #{stack_name} not found."
+  end
+    
+  if green_stack and plain_stack
+    raise "Found both #{stack_name} and #{stack_name}-green, cannot decide which is live. This is fatal. Manually delete the stack you don't need."
+  end 
+
+  if plain_stack 
+    if plain_stack.supports_bluegreen_deployment?(configuration) == false 
+      raise "Stack #{stack_name} doesn't support blue-green deployment with the given configuration."
+    end
+
+    plain_stack.rename_to(stack_name + "-green")
+    green_stack = plain_stack
+    plain_stack = nil # not needed anymore, fail early
+  end 
+
+  if green_stack and green_stack.supports_bluegreen_deployment?(configuration) == false
+    raise "Found stack #{stack_name}-green, but it doesn't support blue-green deployment with the given configuration."
+    puts "Live stack already has the suffix '-green'."
+  end
+
+
+  # is there already a blue stack?
   blue_stack = ops.find_stack(stack_name + "-blue")
   if blue_stack
     if input.choice("A blue stack still exists, maybe from an earlier failed deploy. Should we delete it first?", "Yn") == "y"
@@ -16,29 +42,9 @@ def bluegreen(aws_connection, configuration, input, layer_filter=nil)
       exit 1
     end
   end
-  
-  plain_stack = ops.find_stack(stack_name)
-  green_stack = ops.find_stack(stack_name + "-green")
-  
-  if green_stack && plain_stack
-    puts "Found both, #{stack_name} and #{stack_name}-green, cannot decide which is live. This is fatal. Manually delete the stack you don't need."
-    exit 1
-  elsif plain_stack
-    plain_stack.rename_to(stack_name + "-green")
-    green_stack = plain_stack
-  elsif green_stack
-    puts "Live stack already has the suffix '-green'."
-  else
-    puts "Stack #{stack_name} not found."
-    exit 1
-  end
-  plain_stack = nil # not needed anymore, fail early
 
-  # Configure a blue stack
-  blue_configuration = {
-    'stack' => configuration['stack'].clone,
-    'layers' => configuration['layers'].clone
-  }
+  blue_configuration = Marshal.load(Marshal.dump(configuration))
+
   blue_configuration['stack']['name'] = blue_configuration['stack']['name'] + "-blue"
 
   # Validate deployment
@@ -50,11 +56,15 @@ def bluegreen(aws_connection, configuration, input, layer_filter=nil)
   green_layer_elbs = green_stack.find_elbs
 
   blue_configuration['layers'].each do |blue_layer|
-    elb_name = blue_layer['elb']
+    elb_name = blue_layer['elb'] ? blue_layer['elb']['name'] : nil
+    if not elb_name
+      # try to get the name of the ELB associated with this layer from OpsWorks
+      elb_name = green_stack.find_elb_for_layer(blue_layer['config']['shortname'])
+    end
     green_layer = nil
     elb = nil
     if elb_name
-      green_elb = green_layer_elbs.select{|e| e[:elastic_load_balancer_name] = elb_name}
+      green_elb = green_layer_elbs.select{|e| e[:elastic_load_balancer_name] == elb_name}
       if green_elb.length == 0
         puts "WARN: elb #{elb_name} not associated to any layer in green stack. Looking up in EC2..."
         ec2_elb = AWS::ELB.new.load_balancers[elb_name]
@@ -65,7 +75,7 @@ def bluegreen(aws_connection, configuration, input, layer_filter=nil)
         green_layer = green_layer.length > 0 ?  green_layer[0] : nil
       end
     else
-      puts "WARN: green layer #{blue_layer['name']} does not exist or has no elb set."
+      puts "WARN: green layer #{blue_layer['config']['name']} does not exist or has no elb set."
     end
 
     deployment_strategy[blue_layer['config']['name']] = { 
@@ -80,18 +90,18 @@ def bluegreen(aws_connection, configuration, input, layer_filter=nil)
     exit 1
   end
 
-  puts "\nThe following layers are affected by the update:"
-  puts "  green layer \t elb \t blue layer"
-  puts "  --------------------------------"
+  printf "\nThe following layers are affected by the update:\n"
+  printf "  %-20s %-60s blue layer\n", "green layer", "elb"
+  printf "  ------------------------------------------------------------------------------------------------------\n"
   deployment_strategy.each do |blue_name, hash|
     green_name = hash[:green_layer] ? hash[:green_layer].name : "--- "
     elb_name = hash[:elb] ? hash[:elb][:dns_name] : " (no elb) "
-    puts "  #{green_name} \t #{elb_name} \t #{blue_name}"
+    printf "  %-20s %-60s #{blue_name}\n", green_name, elb_name
   end
   exit unless input.choice("Do you want to continue", "Yn") == "y"
 
 
-  # start the blue stack and but its layers into the deployment strategy
+  # start the blue stack and put its layers into the deployment strategy
   blue_stack = bootstrap_stack(ops, blue_configuration, input, true, false)
   blue_stack.find_layers_by_name.each do |blue_layer|
     deployment_strategy[blue_layer.name][:blue_layer] = blue_layer
@@ -110,17 +120,7 @@ def bluegreen(aws_connection, configuration, input, layer_filter=nil)
       exit
     elsif continue == "y"
       deployment_strategy.each do |name, hash|
-        elb_name = hash[:elb][:elastic_load_balancer_name]
-        puts "Moving elb #{elb_name} ..."
-        hash[:blue_layer].register_instances_with_elb(elb_name)
-        if hash[:green_layer]
-          if hash[:green_layer].has_elb?(elb_name)
-            hash[:green_layer].detach_elb(elb_name)
-          end
-        end
-        hash[:blue_layer].attach_elb(elb_name)
-
-        ##TODO ops.execute_recipes_once layer, ["wanderwalter::newrelic_deploy_event"] # should be in config in future
+        ops.move_elb(hash[:elb][:elastic_load_balancer_name], hash[:green_layer], hash[:blue_layer])       
       end
     end
 
@@ -130,25 +130,20 @@ def bluegreen(aws_connection, configuration, input, layer_filter=nil)
       exit
     elsif continue == "g"
       deployment_strategy.each do |name, hash|
-        puts "Moving elb #{elb_name} ..."
-        hash[:blue_layer].detach_elb(elb_name)
-        
-        if hash[:green_layer]
-          hash[:green_layer].attach_elb(elb_name)
-        end
-
-        ##TODO ops.execute_recipes_once layer, ["wanderwalter::newrelic_deploy_event"] # should be in config in future
+        ops.move_elb(hash[:elb][:elastic_load_balancer_name], hash[:blue_layer], hash[:green_layer])       
       end
 
-      puts "The green stack is now live again."
+      puts "Renaming green stack to '#{stack_name} and deleting blue stack ..."
+      green_stack.rename_to stack_name
+      blue_stack.delete
+      break
     elsif continue == "y"
+      # order is important!
+      blue_stack.rename_to stack_name
+      green_stack.delete
       break
     end
   end
 
-  puts "The blue stack is now live. Removing green stack and renaming blue stack...\n"
-  # order is important!
-  blue_stack.rename_to stack_name
-  green_stack.delete
-  puts "Deployment successfully finished!"
+  puts "Deployment finished!"
 end
