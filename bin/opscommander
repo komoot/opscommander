@@ -2,6 +2,7 @@
 
 require 'rubygems'
 require 'commander/import'
+require 'pp'
 
 require "aws/aws_configuration.rb"
 require 'aws/opsworks.rb'
@@ -168,7 +169,7 @@ command :cat do |c|
       report_error 'Please specify the path to a stack definition yaml file.'
     end
 
-    puts parse_erb(options.config_file, parse_variables(options.variables))
+    pp OpsWorksConfig.load(options.config_file, parse_variables(options.variables))
   end
 end
 
