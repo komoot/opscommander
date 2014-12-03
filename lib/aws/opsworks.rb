@@ -76,6 +76,20 @@ class OpsWorks
     puts "All instances are in status #{status}."
   end
 
+  # Moves an ELB between two layers, which may be in different stacks.
+  def move_elb(elb_name, from_layer, to_layer)
+    puts "Moving elb #{elb_name} ..."
+
+    # first manually register instances, then switch in OpsWorks. 
+
+    to_layer.register_instances_with_elb(elb_name)
+    if from_layer and from_layer.has_elb?(elb_name)
+      from_layer.detach_elb(elb_name)
+    end
+
+    to_layer.attach_elb(elb_name)
+  end
+
   # checks if the instances with the given ids have at the moment all the
   # given success_status
   # if allowed_status is set, the call raises an exception if the status is not successful
