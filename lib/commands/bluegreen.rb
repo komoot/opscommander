@@ -30,9 +30,13 @@ def bluegreen(ops, configuration, input, layer_filter=nil)
     plain_stack = nil # not needed anymore, fail early
   end 
 
-  if green_stack and green_stack.supports_bluegreen_deployment?(configuration) == false
-    raise "Found stack #{stack_name}-green, but it doesn't support blue-green deployment with the given configuration."
-    puts "Live stack already has the suffix '-green'."
+  if green_stack
+    if green_stack.supports_bluegreen_deployment?(configuration) == false
+      puts "Found stack #{stack_name}-green, but it doesn't support blue-green deployment with the given configuration."
+      exit 1
+    end
+
+    puts "Green stack already called #{stack_name}-green"
   end
 
 
