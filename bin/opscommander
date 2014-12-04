@@ -16,6 +16,9 @@ require 'vagrant/vagrant.rb'
 
 require 'config.rb'
 
+# force flush of stdout. for jenkins. slower.
+STDOUT.sync = true
+
 program :version, '0.1.0'
 program :description, 'Manages bootstrapping, configuration and deployment of OpsWorks stacks'
 global_option '--yes'
