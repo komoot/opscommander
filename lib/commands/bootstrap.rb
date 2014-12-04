@@ -73,8 +73,11 @@ def bootstrap_stack(ops, config, input, start_instances, attach_elb=true, create
     end
     layers.push(layer)
 
-    stack.create_elb(l['elb']) if l['elb'] and create_elb
-    layer.attach_elb(l['elb']['name']) if l['elb'] and attach_elb
+    if l['elb']
+      stack.create_elb(l['elb']) if create_elb
+      layer.attach_elb(l['elb']['name']) if attach_elb
+      update_alarms(l['elb']['alarms']) if l['elb']['alarms']
+    end
 
     if l['load_based_auto_scaling'] and l['load_based_auto_scaling']['enabled']
       validate_load_based_auto_scaling_config(config, l)
@@ -100,6 +103,31 @@ def bootstrap_stack(ops, config, input, start_instances, attach_elb=true, create
 
   puts "\n\nStack #{config['stack']['name']} successfully created."
   return stack
+end
+
+def update_alarms(alarms)
+  puts "Updateing alarms..."
+  cw_client = Aws::CloudWatch::Client.new
+  alarms.each do |alarm|
+    alarm = Hash.transform_keys_to_symbols(alarm)
+    cw_client.put_metric_alarm(alarm)
+    puts "updated alarm #{alarm[:alarm_name]}" #not available: if aws_connection.verbose
+  end
+end
+
+# keys to symbols for new Aws sdk
+class Hash
+  #take keys of hash and transform those to a symbols
+  def self.transform_keys_to_symbols(value)
+    if value.is_a?(Array)
+      array = value.map{|x| x.is_a?(Hash) || x.is_a?(Array) ? Hash.transform_keys_to_symbols(x) : x}
+      return array
+    elsif value.is_a?(Hash)
+      hash = value.inject({}){|memo,(k,v)| memo[k.to_sym] = Hash.transform_keys_to_symbols(v); memo}
+      return hash
+    end
+    return value
+  end
 end
 
 #

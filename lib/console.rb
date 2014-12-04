@@ -20,7 +20,9 @@ class Console
   def choice(message, choices)
     default = default(choices)
     message = message + " [" + choices.split('').join('/') + "] ? "
-    if non_interactive
+    if non_interactive and default.nil?
+      raise "--yes fails because '#{choices}' has no default value for question '#{message}'"
+    elsif non_interactive
       puts message + default
       return default.downcase
     else
