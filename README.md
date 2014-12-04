@@ -27,5 +27,10 @@ $> ruby -Ilib bin/opscommander ...
 
 The instance that opscommander runs on needs EC2 (ELB) and OpsWorks full access policies.
 
+### Example Usage ###
+
+```
+ruby -Ilib bin/opscommander bluegreen --config-file wanderwalter.yml.erb --variables environment=live,version=1.xx
+```
 
 
