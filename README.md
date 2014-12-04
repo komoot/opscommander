@@ -9,20 +9,23 @@ $> sudo gem install bundler
 $> xcode-select --install
 ```
 
-### Installation
+### Installation ###
 
 ```
 $> gem build opscommander.gemspec
 $> gem install opscommander-0.1.0.gem
 ``` 
 
-### Run without installing
+### Run without installing ###
 
 ```
 $> bundle install
 $> ruby -Ilib bin/opscommander ... 
 ```
 
+### Running in AWS cloud ###
+
+The instance that opscommander runs on needs EC2 (ELB) and OpsWorks full access policies.
 
 
 
