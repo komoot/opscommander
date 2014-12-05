@@ -8,6 +8,7 @@ require "aws/aws_configuration.rb"
 require 'aws/opsworks.rb'
 require 'commands/bootstrap.rb'
 require 'commands/bluegreen.rb'
+require 'commands/rename.rb'
 require 'commands/delete.rb'
 require 'commands/create_app.rb'
 require 'commands/deploy_app.rb'
@@ -83,6 +84,22 @@ command :delete do |c|
   end
 end
 
+command :rename do |c|
+  c.syntax = 'opscommander rename <old stack name> <new stack name>'
+  c.description = 'Renames a stack.'
+  c.action do |args, options|
+    old_name = args[0]
+    new_name = args[1]
+
+    if not old_name or not new_name
+      report_error "Not enough arguments."
+    end
+
+    ops = connect(options.verbose)
+    rename(ops, old_name, new_name)
+  end
+end
+
 command :create_app do |c|
   c.syntax = 'opscommander create_app [options] <name>'
   c.description = 'Creates an application, overwriting any old one with the same name. The app must be defined in the stack definition yaml file.'
@@ -145,6 +162,7 @@ command :deploy_app do |c|
     deploy_app(ops, configuration, app_name)
   end
 end
+
 command :bluegreen do |c|
   c.syntax = 'opscommander bluegreen [options]'
   c.description = 'Deploys a new version by starting new blue layers and switching elbs afterwards.'

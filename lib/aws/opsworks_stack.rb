@@ -9,8 +9,9 @@ class OpsWorksStack
   attr_reader :opsworks
 
   def initialize(opsworks, stack, verbose)
-    @client = opsworks.client
     @opsworks = opsworks
+    @client = opsworks.client
+    @ec2_client = AWS::EC2.new
     @stack = stack
     @verbose = verbose
   end
@@ -32,8 +33,19 @@ class OpsWorksStack
 
   # updates the stack name
   def rename_to(new_name)
+    old_name = stack_name
+    instances_to_tag = @ec2_client.instances.with_tag('opsworks:stack', old_name)
+
     puts "Renaming #{stack_name} to #{new_name} ..."
     @client.update_stack({:stack_id => stack_id, :name => new_name})
+
+    instances_to_tag.each do |i|
+      instance_name = i.tags['opsworks:instance']
+      i.tags.set({
+        'opsworks:stack' => new_name,
+        'Name' => "#{new_name} - #{instance_name}"
+      })
+    end
 
     #invalidate cached stack settings
     @stack = {:stack_id => stack_id}
