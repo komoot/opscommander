@@ -20,7 +20,7 @@ require 'config.rb'
 # force flush of stdout. for jenkins. slower.
 STDOUT.sync = true
 
-program :version, '1.0.1'
+program :version, '1.0.2'
 program :description, 'Manages bootstrapping, configuration and deployment of OpsWorks stacks'
 global_option '--yes'
 global_option '--verbose'
