@@ -29,3 +29,27 @@ class ErbHash < OpenStruct
   end
 
 end
+
+# Handles optional events
+class Events
+
+  # executes the given events if existing
+  # failing events cannot fail opscommander
+  def self.execute(events)
+    if events
+      events.each do |event|
+        e = event[:execute] || event['execute']
+        if e
+          if system(e)
+            puts "Event sent."
+          else
+            puts "WARNING: command #{e} failed"
+          end
+        else
+          puts "skipping unknown event type #{event}"
+        end
+      end
+    end
+  end
+
+end

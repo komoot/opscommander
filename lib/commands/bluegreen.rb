@@ -116,7 +116,7 @@ def bluegreen(ops, configuration, input, layer_filter=nil)
   puts "In the next step you can switch between the blue and green stack."
 
   while true do
-    continue = input.choice("Do you want to switch to the blue stack (yes) or remove the blue stack or abort?", "Yra")
+    continue = input.choice("The green stack is now active. Do you want to switch to the blue stack (yes) or remove the blue stack or abort?", "Yra")
     if continue == "a"
       exit
     elsif continue == "r"
@@ -129,18 +129,21 @@ def bluegreen(ops, configuration, input, layer_filter=nil)
     end
 
     puts "Now, the blue stack is active. Let it run for a while..."
+    Events.execute(configuration['events']['bluegreen_on_blue_active']) if configuration['events']
+
     continue = input.choice("Do you want to continue and delete the old green stack (y), switch back to green or abort", "Yga")
     if continue == "a"
-      exit
-    elsif continue == "g"
-      deployment_strategy.each do |name, hash|
-        ops.move_elb(hash[:elb][:elastic_load_balancer_name], hash[:blue_layer], hash[:green_layer])       
-      end
-
       puts "Renaming green stack to '#{stack_name} and deleting blue stack ..."
       green_stack.rename_to stack_name
       blue_stack.delete
-      break
+      exit
+    elsif continue == "g"
+      puts "Switching back to green stack..."
+      deployment_strategy.each do |name, hash|
+        ops.move_elb(hash[:elb][:elastic_load_balancer_name], hash[:blue_layer], hash[:green_layer])       
+      end
+      Events.execute(configuration['events']['bluegreen_on_revert_to_green']) if configuration['events']
+      
     elsif continue == "y"
       # order is important!
       blue_stack.rename_to stack_name

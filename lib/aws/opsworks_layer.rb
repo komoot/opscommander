@@ -1,3 +1,5 @@
+require 'poll'
+
 class OpsWorksLayer
   def initialize(stack, layer, verbose)
     @stack = stack
@@ -74,7 +76,7 @@ class OpsWorksLayer
   # @param elb_name [String]
   # @return void
   def detach_elb(elb_name)
-    puts "Attaching #{elb_name} to #{@stack.stack_name}::#{name}" if @verbose
+    puts "Detaching #{elb_name} from #{nice_name}" if @verbose
     @client.detach_elastic_load_balancer({
       :elastic_load_balancer_name => elb_name,
       :layer_id => layer_id
@@ -98,15 +100,31 @@ class OpsWorksLayer
   # @return void
   def register_instances_with_elb(elb_name)
     elb = AWS::ELB.new.load_balancers[elb_name]
-      get_instances().each do |i|
-        id=i[:ec2_instance_id]
-        if id and i[:status] = "online"
-        puts "Registering #{nice_name(i[:hostname])} (#{id}) with elb #{elb_name} ..." if @verbose
-          elb.instances.register(id)
+    instances = get_instances().select{|i| i[:ec2_instance_id]}
+    instances.each do |i|
+        if i[:status] = "online"
+          puts "Registering #{nice_name(i[:hostname])} (#{i[:ec2_instance_id]}) with elb #{elb_name} ..." if @verbose
+          elb.instances.register(i[:ec2_instance_id])
         else
           puts "Skipping #{nice_name(i[:hostname])} (#{i[:status]})" if @verbose
         end
       end
+
+      ids_to_check = instances.map{ |i| {:instance_id => i[:ec2_instance_id]} }
+      puts ids_to_check
+      elb_client = Aws::ElasticLoadBalancing::Client.new
+      Poll.poll(10 * 60, @verbose ? 5 : 15) do
+        states = elb_client.describe_instance_health({
+          :load_balancer_name => elb_name,
+          :instances => ids_to_check
+        })[:instance_states]
+        
+        in_service = states.select{|s| s.state == 'InService'}
+        out_of_service = states.select{|s| s.state == 'OutOfService'}.first
+        print " InService (#{in_service.size} / #{states.size}) " + (out_of_service.nil? ? "" : "[#{out_of_service.description}]") + "\r"
+        in_service.size == states.size 
+      end
+    puts "\nAll instances InService"
   end     
 
   # retrieves all instances in this layer.
