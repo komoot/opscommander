@@ -111,7 +111,6 @@ class OpsWorksLayer
       end
 
       ids_to_check = instances.map{ |i| {:instance_id => i[:ec2_instance_id]} }
-      puts ids_to_check
       elb_client = Aws::ElasticLoadBalancing::Client.new
       Poll.poll(10 * 60, @verbose ? 5 : 15) do
         states = elb_client.describe_instance_health({
