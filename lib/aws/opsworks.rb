@@ -81,12 +81,12 @@ class OpsWorks
     puts "Moving elb #{elb_name} ..."
 
     # first manually register instances, then switch in OpsWorks. 
-
+    
     to_layer.register_instances_with_elb(elb_name)
+    sleep(20)
     if from_layer and from_layer.has_elb?(elb_name)
       from_layer.detach_elb(elb_name)
     end
-
     to_layer.attach_elb(elb_name)
   end
 
