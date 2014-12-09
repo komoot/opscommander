@@ -115,21 +115,6 @@ def update_alarms(alarms)
   end
 end
 
-# keys to symbols for new Aws sdk
-class Hash
-  #take keys of hash and transform those to a symbols
-  def self.transform_keys_to_symbols(value)
-    if value.is_a?(Array)
-      array = value.map{|x| x.is_a?(Hash) || x.is_a?(Array) ? Hash.transform_keys_to_symbols(x) : x}
-      return array
-    elsif value.is_a?(Hash)
-      hash = value.inject({}){|memo,(k,v)| memo[k.to_sym] = Hash.transform_keys_to_symbols(v); memo}
-      return hash
-    end
-    return value
-  end
-end
-
 #
 # Bootstrap a plain ec2 stack using autoscaling and launch configurations
 # experimental feature
@@ -139,8 +124,6 @@ def bootstrap_plainec2(aws_connection, config, start_instances, input, create_el
   as_client = Aws::AutoScaling::Client.new
   elb_client = Aws::ElasticLoadBalancing::Client.new
   
-
-
   raise "missing 'auto_scaling_group_name'" if not config[:autoscaling_group][:auto_scaling_group_name]
 
   existing_group = as_client.describe_auto_scaling_groups({
