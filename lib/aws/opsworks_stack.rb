@@ -1,5 +1,6 @@
 #require 'poll'
 
+require 'aws-sdk-v1'
 require_relative 'opsworks_layer.rb'
 require_relative 'opsworks_app.rb'
 require_relative 'opsworks_deployment.rb'
