@@ -2,6 +2,8 @@ require 'erb'
 require 'base64'
 require 'poll'
 
+require_relative '../aws/ec2_autoscale.rb'
+require_relative '../utils.rb'
 require_relative '../console.rb'
 
 #
@@ -165,7 +167,7 @@ def bootstrap_plainec2(aws_connection, config, start_instances, input, create_el
 
   puts "creating launch-config '#{config[:launch_configuration][:launch_configuration_name]}' and autoscaling-group '#{config[:autoscaling_group][:auto_scaling_group_name]}'..."
   lconfig = config[:launch_configuration]
-  lconfig[:user_data] = parse_userdata(lconfig[:user_data])
+  lconfig[:user_data] = Ec2Autoscale.parse_userdata(lconfig[:user_data])
   as_client.create_launch_configuration(lconfig)
 
   if not start_instances
@@ -220,23 +222,6 @@ def bootstrap_plainec2(aws_connection, config, start_instances, input, create_el
   puts "done..."
 end
 
-# takes a list of user data files and creates a base64 encoded multipart message
-def parse_userdata(files)
-  content = "Content-Type: multipart/mixed; boundary=\"===============7530540225998998152==\"\nMIME-Version: 1.0\n\n"
-  files.each do |file|
-    content += "--===============7530540225998998152==\n"
-    raise "missing content_type" if not file[:content_type]
-    raise "missing content" if not file[:content]
-    raise "missing filename" if not file[:filename]
-    content += "Content-Type: #{file[:content_type]}; charset=\"us-ascii\"\n"
-    content += "MIME-Version: 1.0\n"
-    content += "Content-Transfer-Encoding: 7bit\n"
-    content += "Content-Disposition: attachment; filename=\"#{file[:filename]}\"\n\n"
-    content += "#{file[:content]}\n"
-  end
-  content += "--===============7530540225998998152==--\n"
-  return Base64.encode64(content)
-end
 
 # checks that all states in 'instance_states' are in success_status
 # raise an excpetion if all states or not in 'allowed_status'
