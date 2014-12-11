@@ -51,7 +51,7 @@ class Events
       end
     end
   end
-
+end
 
 # recursively transforms keys to symbols
 # Needed for Aws sdk >= 2.0
@@ -68,6 +68,6 @@ class Hash
     end
     return value
   end
+  
 end
 
-end
