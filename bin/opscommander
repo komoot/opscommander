@@ -190,7 +190,7 @@ command :cat do |c|
       report_error 'Please specify the path to a stack definition yaml file.'
     end
 
-    pp OpsWorksConfig.load(options.config_file, parse_variables(options.variables))
+    puts OpsWorksConfig.parse(options.config_file, parse_variables(options.variables))
   end
 end
 

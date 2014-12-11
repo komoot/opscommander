@@ -9,7 +9,12 @@ module OpsWorksConfig
     config = YAML.load(renderer.render())
   end
 
-  module_function :load
+  def parse(yaml_file, config)
+  	renderer = ErbHash.new(yaml_file, config)
+  	renderer.render()
+  end
+
+  module_function :load, :parse
 
 end
 
