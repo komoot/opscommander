@@ -108,7 +108,7 @@ def bootstrap_stack(ops, config, input, start_instances, attach_elb=true, create
 end
 
 def update_alarms(alarms)
-  puts "Updateing alarms..."
+  puts "Updating alarms..."
   cw_client = Aws::CloudWatch::Client.new
   alarms.each do |alarm|
     alarm = Hash.transform_keys_to_symbols(alarm)
