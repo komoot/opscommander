@@ -1,4 +1,4 @@
-Opscommander ![Travis build](https://travis-ci.org/komoot/opscommander.svg?branch=master)
+Opscommander [![Build Status](https://travis-ci.org/komoot/opscommander.svg?branch=master)](https://travis-ci.org/komoot/opscommander)
 ============
 
 Opscommander is a Ruby tool for managing OpsWorks stacks. The basic idea is to treat stacks, layers and application
