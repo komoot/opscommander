@@ -148,7 +148,8 @@ must be defined in the stack configuration file and must be created in OpsWorks
 
 For finer-grained control over which instances the application is deployed to,
 it is recommended to use an application tag which indicates the layers/instances
-it should be deployed to. See [this blog post](http://blogs.aws.amazon.com/application-management/post/Tx2FPK7NJS5AQC5/Running-Docker-on-AWS-OpsWorks) for 
+it should be deployed to and check for this tag in your deployment recipe. 
+See [this blog post](http://blogs.aws.amazon.com/application-management/post/Tx2FPK7NJS5AQC5/Running-Docker-on-AWS-OpsWorks) for 
 one example of such an approach.
 
 ##### Example
@@ -171,7 +172,7 @@ If the deployment fails, the `bluegreen` command can generally be re-run. It wil
 \<stack name\>-green stack running and assume that this is the live stack that we want to replace. 
 
 For scenarios with multiple apps and layers, it is recommended to use an application tag which indicates the layers/instances
-it should be deployed to. See [this blog post](http://blogs.aws.amazon.com/application-management/post/Tx2FPK7NJS5AQC5/Running-Docker-on-AWS-OpsWorks) for 
+it should be deployed to and check for this tag in your deployment recipe. See [this blog post](http://blogs.aws.amazon.com/application-management/post/Tx2FPK7NJS5AQC5/Running-Docker-on-AWS-OpsWorks) for 
 one example of such an approach.
 
 ##### Options
