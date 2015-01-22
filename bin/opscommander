@@ -13,8 +13,6 @@ require 'commands/delete.rb'
 require 'commands/create_app.rb'
 require 'commands/deploy_app.rb'
 
-require 'vagrant/vagrant.rb'
-
 require 'config.rb'
 
 # force flush of stdout. for jenkins. slower.
