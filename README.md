@@ -1,6 +1,10 @@
 Opscommander
 ============
 
+![Travis build](https://travis-ci.org/komoot/opscommander.svg?branch=master)
+
+## Introduction
+
 Opscommander is a Ruby tool for managing OpsWorks stacks. The basic idea is to treat stacks, layers and application
 settings as immutable values. All relevant settings for a stack are kept in a YAML file that completely describes
 the stack and acts as its single source of truth. Given the information in the YAML file, Opscommander can perform an 
