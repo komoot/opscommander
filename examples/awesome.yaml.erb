@@ -1,0 +1,201 @@
+# This is an example YAML configuration file showing how to use Opscommander 
+# (https://github.com/komoot/opscommander). Because it is an .erb file, Ruby code 
+# constructs can be used to generate dynamic content.
+#
+# This example configuration uses one mandatory variable, 'environment', which corresponds to the 
+# environment we are deploying to, for example 'live' or 'staging'. 
+#
+# The stack in this example has only a single layer, running a Java app inside a Docker container.
+
+<%
+
+# Tries to get a secret value from either an environment variable (useful for CI environment)
+# or from a .trousseau file (for local development, see https://github.com/oleiade/trousseau)
+def get_secret(var, trousseau_key) 
+  secret = "#{ENV[var]}"
+  secret = `trousseau get #{trousseau_key}` if secret.length == 0
+  raise "Could not get secret from environment (#{var}) or from fallback!" if secret.length == 0
+  return secret
+end
+
+# Configure live environment differently from other environments.
+# The host naming scheme is a good way of distinguishing servers when
+# you have a lot of them.
+if environment.eql?('live')
+  security_group = 'sg-1234567'           # security group for live environment
+  naming_scheme = 'Planets_and_Moons'    
+  color = 'rgb(45, 114, 184)'
+  newrelic_apm_enabled = true
+else
+  security_group = 'sg-2345678'          # default test environment security group
+  naming_scheme = 'Baked_Goods'
+  color = 'rgb(186, 65, 50)'
+  newrelic_apm_enabled = false           # Disable New Relic monitoring for test environments
+end
+
+# In this example our stacks are running in a Virtual Private Cloud, so we need VPC information.
+vpc = 'vpc-12345678'
+subnet_a = 'subnet-abc12345'
+subnet_b = 'subnet-def23456'
+
+%>
+
+stack:
+   name: awesome-app-<%= environment || 'beta' %>
+   region: eu-west-1
+   vpc_id: <%= vpc %>
+   default_subnet_id: <%= subnet_a %>
+
+   service_role_arn: arn:aws:iam::123456789012:role/opsworks-role
+   default_instance_profile_arn: arn:aws:iam:::12345678901:instance-profile/awesome-app-instance-profile
+   default_os: Ubuntu 14.04 LTS
+   hostname_theme: <%= naming_scheme %>
+   
+   # OpsWorks default security groups are too lax - disable them.
+   use_opsworks_security_groups: false     
+
+   configuration_manager:
+      name: 'Chef'
+      version: '11.10'
+
+   chef_configuration:
+      manage_berkshelf: true
+      berkshelf_version: 3.1.3
+
+   attributes:
+     Color: <%= color %>
+
+   # We are using Chef cookbooks. With OpsWorks, we are forced to have a single monolithic
+   # cookbook repository, which is hosted in a private GitHub repository.
+   use_custom_cookbooks: true
+   custom_cookbooks_source:
+      type: git
+      url: git@github.com:awesomecompany/awesome-chef-cookbooks
+      ssh_key: "<%= get_secret('GITHUB_CHEF_SSH_KEY', 'github.chef-readonly.rsa_private_key.one-line') %>"
+      revision: master
+
+   # Configure custom stack JSON. We configure our application from outside, e.g. JVM parameters.
+   # We are using the escapestudios-cookbooks/newrelic cookbook, which we configure from here as well.
+   # The Docker registry we are retrieving our images from is also configured here.
+   custom_json:
+      awesome_app:
+        java_opts:
+          heap_size: 1024m
+      newrelic:
+        license: '<%= get_secret('NEWRELIC_LICENSE', 'newrelic.license')  %>'
+        application_monitoring:
+          enabled: <%= newrelic_apm_enabled %>
+          app_name: My Awesome App
+      docker:
+        docker.awesomecompany.com:
+          password: '<%= get_secret('DOCKER_REGISTRY_PASSWORD', 'docker-registry.password') %>'
+
+# Give permissions to OpsWorks users. These users have to be created beforehand using the OpsWorks console.
+permissions:
+  john:
+    sudo: true
+    ssh: true
+  emma:
+    sudo: true
+    ssh: true
+  steve:
+    sudo: false
+    ssh: true
+    
+# Configure a load-based autoscaling policy.
+load_based_auto_scaling:
+  default:
+    up_scaling:
+      instance_count: 1
+      thresholds_wait_time: 5
+      ignore_metrics_time: 20
+      cpu_threshold: 80
+    down_scaling:
+      instance_count: 1
+      thresholds_wait_time: 10
+      ignore_metrics_time: 10
+      cpu_threshold: 60
+
+# Layer configuration. We have only a single layer here, but we could define multiple ones.
+layers:
+   - config:
+        name: 'Java Application Server'
+        shortname: 'java-app'
+        type: 'custom'
+        custom_security_group_ids: [ <%= security_group %> ]
+        auto_assign_public_ips: true        
+        custom_recipes:
+           setup: ["awesome-app", "awesome-app::logging"]
+           deploy: ["awesome-app::containers"]
+
+<% if environment.eql? 'live' %>
+     # Only configure load-based autoscaling for the live environment.
+     load_based_auto_scaling: 
+        enabled: true
+        config: 'default'
+     instances:
+  <% for subnet, scale_type in [subnet_a, '24/7', subnet_a, 'load', subnet_b, '24/7', subnet_b, 'load'].each_slice(2) %>
+        - subnet_id: <%= subnet %>
+          instance_type: m3.large
+          os: Ubuntu 14.04 LTS
+          auto_scaling_type: <%= scale_type %>
+          root_device_type: 'instance-store'
+  <% end %>
+<% else %>
+     load_based_auto_scaling: 
+        enabled: false
+     instances:
+        - instance_type: m3.large
+          os: Ubuntu 14.04 LTS
+          subnet_id: <%= subnet_a %>
+          auto_scaling_type: '24/7'
+          root_device_type: 'instance-store'
+<% end %>
+
+# ELBs and their corresponding CloudWatch alarms can also be configured using OpsCommander.
+# This is entirely optional - if no elb information is provided, Opscommander will try to re-use
+# any currently attached ELBs for operations that require ELB updates, such as blue-green deployments.
+<% if environment.eql? 'live' %>
+     elb: <% elb_name='awesome-elb-' + environment %>
+        name: <%= elb_name %>
+        subnets: [ '<%= subnet_a  %>', '<%= subnet_b %>' ]
+        security_groups: [ sg-34567890 ]
+        listeners:
+          - load_balancer_port: 80
+            protocol: HTTP
+            instance_port: 80
+            instance_protocol: HTTP
+        health_check:
+           healthy_threshold: 2
+           unhealthy_threshold: 3
+           interval: 10
+           timeout: 5
+           target: 'HTTP:80/_ping'
+        alarms:
+           - alarm_name: <%= elb_name %>-no-healty-instance
+             alarm_description: "No instance in <%= elb_name %>."
+             actions_enabled: <%= environment == 'live' ? 'true' : 'false'  %>
+             ok_actions: ['arn:aws:sns:eu-west-1:123456789012:escalate']
+             alarm_actions: ['arn:aws:sns:eu-west-1:123456789012:escalate']
+             metric_name: HealthyHostCount
+             namespace: AWS/ELB
+             statistic: Minimum
+             dimensions:
+                - name: LoadBalancerName
+                  value: <%= elb_name %>
+             period: 60
+             evaluation_periods: 1
+             threshold: 1
+             comparison_operator: LessThanThreshold
+<% end %>
+
+# Configure an OpsWorks application. In our example it is Docker-based, so there is not much 
+# to configure. If a variable called 'tag' is not found, the 'latest' tag is used.
+apps:
+  awesome-app:
+    type: 'other'
+    app_source:
+      type: 'other'
+    environment:
+      TAG: <%= tag || 'latest' %>
+      LAYER: java-app
