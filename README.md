@@ -15,6 +15,13 @@ Blue-green deployments are also not possible out-of-the-box in OpsWorks. If your
 to that problem using a strategy that includes creating a new stack in parallel and switching the ELBs from their attachment points
 in the old stack to the new stack without downtime. See the [`bluegreen` command](https://github.com/komoot/opscommander#bluegreen).
 
+## Changelog
+
+#### 1.0.3
+
+Initial stable release.
+
+
 ## Installing and running Opscommander
 
 ### Dependencies
