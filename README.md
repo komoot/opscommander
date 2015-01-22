@@ -80,14 +80,14 @@ $> opscommander bootstrap --config-file examples/awesome.yaml.erb --variables en
 Bootstraps an OpsWorks stack from scratch. Optionally creates ELBs and CloudWatch alarms as well, if 
 these are configured in the stack configuration file.
 
-#### Options
+##### Options
 
 * `--config-file`: stack configuration file
 * `--variables`: template variables for the stack configuration file
 * `--start`: start layer after it is created
-* `--create-elbs': create ELBs and CloudWatch alarms as well
+* `--create-elbs`: create ELBs and CloudWatch alarms as well
 
-#### Example
+##### Example
 
 ```
 $> opscommander bootstrap --config-file examples/awesome.yaml.erb --variables environment=live,tag=latest --start
@@ -97,7 +97,7 @@ $> opscommander bootstrap --config-file examples/awesome.yaml.erb --variables en
 
 Stops all instances in all layers, deletes layers and apps and deletes the stack.
 
-#### Example
+##### Example
 
 ```
 $> opscommander delete notsoawesome-stack
@@ -109,7 +109,7 @@ Renames a stack. Also updates the EC2 instance tags that OpsWorks sets when crea
 the new stack name. Triggers the "Configuration" OpsWorks lifecycle event which you can hook into for e.g. 
 updating logging configuration, if the stack name is used there.
 
-#### Example
+##### Example
 
 ```
 $> opscommander rename awesome-stack another-stack
