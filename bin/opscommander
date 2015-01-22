@@ -50,25 +50,6 @@ command :bootstrap do |c|
   end
 end
 
-command :test do |c|
-  c.syntax = 'opscommander test [options]'
-  c.description = 'Tests a stack configuration file with Test Kitchen. Sequentially loads all layers and starts one instance with \'kitchen\'.'
-  c.option '--config-file [filename]', String, 'path to stack definition yaml file.'
-  c.option '--variables [key=value,key=value,...]', String, 'optional template variables for the yaml file.'
-  c.action do |args, options|
-    if not options.config_file
-      report_error 'Please specify the path to a stack definition yaml file.'
-    end
-
-    options.default \
-      :environment => 'beta'
-
-    input = open_input(options.yes)
-    configuration = OpsWorksConfig.load(options.config_file, parse_variables(options.variables, options.verbose))
-    vagrant_test(configuration)
-  end
-end
-
 command :delete do |c|
   c.syntax = 'opscommander delete <stack name>'
   c.description = 'Deletes a stack.'
