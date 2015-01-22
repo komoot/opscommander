@@ -60,7 +60,7 @@ EC2, ELB and OpsWorks full access policies.
 
 See [awesome.yaml.erb](https://github.com/komoot/opscommander/blob/master/examples/awesome.yaml.erb) for
 a complete stack configuration example. Note that the attribute names closely correspond to the attributes
-used for the various commands in the (OpsWorks client in the AWS Ruby SDK)[http://docs.aws.amazon.com/AWSRubySDK/latest/AWS/OpsWorks/Client.html] - 
+used for the various commands in the [OpsWorks client in the AWS Ruby SDK](http://docs.aws.amazon.com/AWSRubySDK/latest/AWS/OpsWorks/Client.html) - 
 familiarity with this and other classes in the AWS Ruby SDK is helpful for understanding how Opscommander works. 
 
 ## Commands
