@@ -54,18 +54,65 @@ EC2, ELB and OpsWorks full access policies.
 
 ## Stack configuration
 
-(example stack configuration here)
+See [awesome.yaml.erb](https://github.com/komoot/opscommander/blob/master/examples/awesome.yaml.erb) for
+a complete stack configuration example. Note that the attribute names closely correspond to the attributes
+used for the various commands in the (OpsWorks client in the AWS Ruby SDK)[http://docs.aws.amazon.com/AWSRubySDK/latest/AWS/OpsWorks/Client.html] - 
+familiarity with this and other classes in the AWS Ruby SDK is helpful for understanding how Opscommander works. 
 
 ## Commands
 
-### blue_green
-
-
-
-### Example Usage ###
+All commands have usage instructions:
 
 ```
-ruby -Ilib bin/opscommander bluegreen --config-file wanderwalter.yml.erb --variables environment=live,version=1.xx
+$> opscommander bootstrap --help
+```
+
+Any command that takes a `--config-file` parameter, meaning that it reads stack information from a stack 
+configuration file, also takes a `--variables` parameter. These variables are used as template variables 
+for the stack configuration file. 
+
+```
+$> opscommander bootstrap --config-file examples/awesome.yaml.erb --variables environment=live,tag=latest
+```
+
+### bootstrap
+
+Bootstraps an OpsWorks stack from scratch. Optionally creates ELBs and CloudWatch alarms as well, if 
+these are configured in the stack configuration file.
+
+#### Options
+
+* `--config-file`: stack configuration file
+* `--variables`: template variables for the stack configuration file
+* `--start`: start layer after it is created
+* `--create-elbs': create ELBs and CloudWatch alarms as well
+
+#### Example
+
+```
+$> opscommander bootstrap --config-file examples/awesome.yaml.erb --variables environment=live,tag=latest --start
+```
+
+### delete
+
+Stops all instances in all layers, deletes layers and apps and deletes the stack.
+
+#### Example
+
+```
+$> opscommander delete notsoawesome-stack
+```
+
+### rename
+
+Renames a stack. Also updates the EC2 instance tags that OpsWorks sets when creating an instance to reflect
+the new stack name. Triggers the "Configuration" OpsWorks lifecycle event which you can hook into for e.g. 
+updating logging configuration, if the stack name is used there.
+
+#### Example
+
+```
+$> opscommander rename awesome-stack another-stack
 ```
 
 
