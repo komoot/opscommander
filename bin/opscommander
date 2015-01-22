@@ -113,7 +113,7 @@ end
 
 command :deploy_app do |c|
   c.syntax = 'opscommander deploy_app [options] <name>'
-  c.description = 'Deploys an application. The app must be defined in the stack definition yaml file and it must exist in OpsWorks (see create_app).'
+  c.description = 'Deploys an application to all running instances. The app must be defined in the stack definition yaml file and it must exist in OpsWorks (see create_app).'
   c.option '--config-file [filename]', String, 'path to stack definition yaml file.'
   c.option '--variables [key=value,key=value,...]', String, 'optional template variables for the yaml file.'
   c.action do |args, options|
@@ -144,7 +144,7 @@ end
 
 command :bluegreen do |c|
   c.syntax = 'opscommander bluegreen [options]'
-  c.description = 'Deploys a new version by starting new blue layers and switching elbs afterwards.'
+  c.description = 'Deploys a new version by starting a new stack and switching ELBs once it is online. Deletes the current live stack when done.'
   c.option '--config-file [filename]', String, 'path to stack definition yaml file.'
   c.option '--variables [key=value,key=value,...]', String, 'optional template variables for the yaml file.'
   c.action do |args, options|
