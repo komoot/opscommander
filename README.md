@@ -161,14 +161,14 @@ $> opscommander deploy_app --config-file examples/awesome.yaml.erb awesome-app
 
 Performs a blue-green deployment using the following pattern:
 
-1. The currently running stack is renamed to <stack name>-green.
-2. A new <stack name>-blue stack is created and started.
+1. The currently running stack is renamed to \<stack name\>-green.
+2. A new \<stack name\>-blue stack is created and started.
 3. When the blue stack is online, ELBs are switched over from the green stack. The ELBs will for a short while contain instances from both stacks.
 4. The green stack is stopped and deleted.
-5. The blue stack is renamed to <stack name> and is now the new live stack.
+5. The blue stack is renamed to \<stack name\> and is now the new live stack.
 
-If the deployment fails, the `bluegreen` command can generally be re-run. It will detect if there is already a <stack name>-green stack running
-and assume that this is the live stack that we want to replace. 
+If the deployment fails, the `bluegreen` command can generally be re-run. It will for example detect if there is already 
+\<stack name\>-green stack running and assume that this is the live stack that we want to replace. 
 
 For scenarios with multiple apps and layers, it is recommended to use an application tag which indicates the layers/instances
 it should be deployed to. See [this blog post](http://blogs.aws.amazon.com/application-management/post/Tx2FPK7NJS5AQC5/Running-Docker-on-AWS-OpsWorks) for 
