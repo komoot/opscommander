@@ -11,6 +11,10 @@ The reason for developing Opscommander was to integrate OpsWorks stacks better w
 where for example Jenkins can run it to perform deployment tasks. We like OpsWorks a lot for user management, 
 monitoring, Chef integration and so on, but using the AWS console to perform these tasks quickly becomes repetitive.
 
+Blue-green deployments are also not possible out-of-the-box in OpsWorks. If your stack uses ELBs, Opscommander offers a solution 
+to that problem using a strategy that includes creating a new stack in parallel and switching the ELBs from their attachment points
+in the old stack to the new stack without downtime. See the `bluegreen` command.
+
 ## Installing and running Opscommander
 
 ### Dependencies
@@ -67,6 +71,11 @@ All commands have usage instructions:
 $> opscommander bootstrap --help
 ```
 
+### Global options
+
+* `--yes`: Automatically accept any input prompts with a "Yes". Useful for CI environments.
+* `--verbose`: Enable verbose mode.
+
 Any command that takes a `--config-file` parameter, meaning that it reads stack information from a stack 
 configuration file, also takes a `--variables` parameter. These variables are used as template variables 
 for the stack configuration file. 
@@ -115,4 +124,95 @@ updating logging configuration, if the stack name is used there.
 $> opscommander rename awesome-stack another-stack
 ```
 
+### create_app
+
+Creates an application, overwriting any application with the same name. The application must be
+defined in the stack configuration file.
+
+##### Options
+
+* `--config-file`: stack configuration file
+* `--variables`: template variables for the stack configuration file
+
+##### Example
+
+```
+$> opscommander create_app --config-file examples/awesome.yaml.erb --variables version=1.23 awesome-app
+```
+
+### deploy_app
+
+Runs an OpsWorks deployment of an application on all instances. The application
+must be defined in the stack configuration file and must be created in OpsWorks
+(see the create_app command). 
+
+For finer-grained control over which instances the application is deployed to,
+it is recommended to use an application tag which indicates the layers/instances
+it should be deployed to. See [this blog post](http://blogs.aws.amazon.com/application-management/post/Tx2FPK7NJS5AQC5/Running-Docker-on-AWS-OpsWorks) for 
+one example of such an approach.
+
+##### Example
+
+```
+$> opscommander deploy_app --config-file examples/awesome.yaml.erb awesome-app
+```
+
+### bluegreen
+
+Performs a blue-green deployment using the following pattern:
+
+1. The currently running stack is renamed to <stack name>-green.
+2. A new <stack name>-blue stack is created and started.
+3. When the blue stack is online, ELBs are switched over from the green stack. The ELBs will for a short while contain instances from both stacks.
+4. The green stack is stopped and deleted.
+5. The blue stack is renamed to <stack name> and is now the new live stack.
+
+If the deployment fails, the `bluegreen` command can generally be re-run. It will detect if there is already a <stack name>-green stack running
+and assume that this is the live stack that we want to replace. 
+
+For scenarios with multiple apps and layers, it is recommended to use an application tag which indicates the layers/instances
+it should be deployed to. See [this blog post](http://blogs.aws.amazon.com/application-management/post/Tx2FPK7NJS5AQC5/Running-Docker-on-AWS-OpsWorks) for 
+one example of such an approach.
+
+##### Options
+
+* `--config-file`: stack configuration file
+* `--variables`: template variables for the stack configuration file
+
+##### Example
+
+```
+# --yes means any input prompts will automatically be accepted with a "Yes" answer.
+# It is a global option that can be used with any command.
+$> opscommander bluegreen --config-file examples/awesome.yaml.erb awesome-app
+```
+
+### cat
+
+Echoes back the parsed and templated stack configuration file. Useful for debugging your stack configuration.
+
+##### Options
+
+* `--config-file`: stack configuration file
+* `--variables`: template variables for the stack configuration file
+
+##### Example
+
+```
+$> opscommander cat --config-file examples/awesome.yaml.erb --variables environment=where_does_this_variable_go?
+```
+
+### whoami
+
+Uses the current AWS credentials and displays user information.
+
+##### Example
+
+```
+$> opscommander whoami
+```
+
+## License
+
+Licensed under the Apache License, version 2.0. See [LICENSE](https://github.com/komoot/opscommander/blob/master/LICENSE).
 
