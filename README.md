@@ -182,6 +182,9 @@ For scenarios with multiple apps and layers, it is recommended to use an applica
 it should be deployed to and check for this tag in your deployment recipe. See [this blog post](http://blogs.aws.amazon.com/application-management/post/Tx2FPK7NJS5AQC5/Running-Docker-on-AWS-OpsWorks) for 
 one example of such an approach.
 
+Note that it in order to avoid downtime, the OpsWorks deployment **should not finish before the application is online and ready to go!** Some polling
+may have to be implemented as part of the deployment recipe if the application takes a while to start. 
+
 ##### Options
 
 * `--config-file`: stack configuration file
