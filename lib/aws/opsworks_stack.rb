@@ -220,7 +220,7 @@ class OpsWorksStack
   # Retrieves an app by name.
   def get_app(name)
     apps = @client.describe_apps({:stack_id => stack_id})[:apps]
-    app = apps.select {|a| a[:name].eql? name}
+    apps = apps.select {|a| a[:name].eql? name}
 
     if apps.length == 0 
       raise "Could not find app called \"#{name}\"!"
