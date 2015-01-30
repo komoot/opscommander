@@ -17,6 +17,10 @@ in the old stack to the new stack without downtime. See the [`bluegreen` command
 
 ## Changelog
 
+#### 1.0.4
+
+- 
+
 #### 1.0.3
 
 Initial stable release.
