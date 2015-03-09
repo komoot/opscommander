@@ -77,12 +77,15 @@ class OpsWorks
   end
 
   # Moves an ELB between two layers, which may be in different stacks.
-  def move_elb(elb_name, from_layer, to_layer)
+  def move_elb(elb_name, from_layer, to_layer, mixed_state_duration=0)
     puts "Moving elb #{elb_name} ..."
 
     # first manually register instances, then switch in OpsWorks. 
     
     to_layer.register_instances_with_elb(elb_name)
+
+    sleep(mixed_state_duration)
+
     if from_layer and from_layer.has_elb?(elb_name)
       from_layer.detach_elb(elb_name)
     end

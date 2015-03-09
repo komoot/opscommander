@@ -147,15 +147,19 @@ command :bluegreen do |c|
   c.description = 'Deploys a new version by starting a new stack and switching ELBs once it is online. Deletes the current live stack when done.'
   c.option '--config-file [filename]', String, 'path to stack definition yaml file.'
   c.option '--variables [key=value,key=value,...]', String, 'optional template variables for the yaml file.'
+  c.option '--mixed-state-duration', Integer, 'How long to let servers run in a mixed state, in seconds. Default = 0.'
   c.action do |args, options|
     if not options.config_file
       report_error 'Please specify the path to a stack definition yaml file.'
     end
+    
+    options.default \
+      :mixed_state_duration => 0
 
     conn = connect(options.verbose)
     input = open_input(options.yes)
     configuration = OpsWorksConfig.load(options.config_file, parse_variables(options.variables, options.verbose))
-    bluegreen(OpsWorks.new(conn), configuration, input)
+    bluegreen(OpsWorks.new(conn), configuration, input, options.mixed_state_duration)
   end
 end
 

@@ -3,7 +3,7 @@ require_relative '../console.rb'
 # Performs a blue-green deployment of a stack by cloning it.
 # The deployment process is designed as failsafe and fault tolerant as possible. It can recover from broken earlier deploys.
 #
-def bluegreen(ops, configuration, input, layer_filter=nil)
+def bluegreen(ops, configuration, input, mixed_state_duration)
   stack_name = configuration['stack']['name']
 
   plain_stack = ops.find_stack(stack_name)
@@ -124,7 +124,7 @@ def bluegreen(ops, configuration, input, layer_filter=nil)
       exit
     elsif continue == "y"
       deployment_strategy.each do |name, hash|
-        ops.move_elb(hash[:elb][:elastic_load_balancer_name], hash[:green_layer], hash[:blue_layer])       
+        ops.move_elb(hash[:elb][:elastic_load_balancer_name], hash[:green_layer], hash[:blue_layer], mixed_state_duration)       
       end
     end
 
