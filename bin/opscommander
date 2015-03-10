@@ -147,7 +147,7 @@ command :bluegreen do |c|
   c.description = 'Deploys a new version by starting a new stack and switching ELBs once it is online. Deletes the current live stack when done.'
   c.option '--config-file [filename]', String, 'path to stack definition yaml file.'
   c.option '--variables [key=value,key=value,...]', String, 'optional template variables for the yaml file.'
-  c.option '--mixed-state-duration', Integer, 'How long to let servers run in a mixed state, in seconds. Default = 0.'
+  c.option '--mixed-state-duration [SECONDS]', Integer, 'How long to let servers run in a mixed state, in seconds. Default = 0.'
   c.action do |args, options|
     if not options.config_file
       report_error 'Please specify the path to a stack definition yaml file.'
