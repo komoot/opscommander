@@ -17,6 +17,10 @@ in the old stack to the new stack without downtime. See the [`bluegreen` command
 
 ## Changelog
 
+#### 1.0.5
+
+- Allow a configurable mixed state period during blue-green deploys.
+
 #### 1.0.4
 
 - Bugfix: multiple apps now supported.
