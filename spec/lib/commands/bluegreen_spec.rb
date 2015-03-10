@@ -23,7 +23,7 @@ describe 'bluegreen' do
     it 'Should fail if no manually configured ELB is found' do
       expect(@stack).to receive(:supports_bluegreen_deployment?).and_return(false)
       expect(@stack).to_not receive(:rename_to)
-      expect { bluegreen(@ops, @config, nil) }.to raise_error(RuntimeError, /doesn't support blue-green deployment/)
+      expect { bluegreen(@ops, @config, nil, 0) }.to raise_error(RuntimeError, /doesn't support blue-green deployment/)
     end
 
   end
