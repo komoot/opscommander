@@ -84,6 +84,7 @@ class OpsWorks
     
     to_layer.register_instances_with_elb(elb_name)
 
+    puts "Allowing mixed state for #{mixed_state_duration} seconds ..."
     sleep(mixed_state_duration)
 
     if from_layer and from_layer.has_elb?(elb_name)
