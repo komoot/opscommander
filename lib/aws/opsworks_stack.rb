@@ -51,14 +51,6 @@ class OpsWorksStack
     #invalidate cached stack settings
     @stack = {:stack_id => stack_id}
 
-    # Trigger "Configure" lifecycle, can handle anything that relies on the stack name there
-
-    deployment = @client.create_deployment({
-      :stack_id => stack_id,
-      :command => {:name => 'configure'},
-      :comment => "Triggered by stack rename"
-    })
-
   end
 
   # Grant ssh/sudo access to users based on their username.
