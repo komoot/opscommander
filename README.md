@@ -17,6 +17,10 @@ in the old stack to the new stack without downtime. See the [`bluegreen` command
 
 ## Changelog
 
+#### 1.0.6
+
+- Don't trigger Configure event on stack renaming, as this is a potentially expensive operation to perform right after boot.
+
 #### 1.0.5
 
 - Allow a configurable mixed state period during blue-green deploys.
