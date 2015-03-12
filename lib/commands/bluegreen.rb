@@ -111,12 +111,12 @@ def bluegreen(ops, configuration, input, mixed_state_duration)
     deployment_strategy[blue_layer.name][:blue_layer] = blue_layer
   end
 
-  puts "\nAll instances in the blue stack are running."
-  puts "You can now manually test the new instances."
-  puts "In the next step you can switch between the blue and green stack."
+  puts "\nAll instances in the blue stack are running. Sleeping for one minute to allow OpsWorks Configure events to run."
+
+  sleep(60)
 
   while true do
-    continue = input.choice("The green stack is now active. Do you want to switch to the blue stack (yes) or remove the blue stack or abort?", "Yra")
+    continue = input.choice("The green stack is currently active. Do you want to switch to the blue stack (yes) or remove the blue stack or abort?", "Yra")
     if continue == "a"
       exit
     elsif continue == "r"
