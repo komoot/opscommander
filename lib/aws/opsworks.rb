@@ -80,7 +80,8 @@ class OpsWorks
   def move_elb(elb_name, from_layer, to_layer, mixed_state_duration=0)
     puts "Moving elb #{elb_name} ..."
 
-    # first manually register instances, then switch in OpsWorks. 
+    # First manually register instances, then switch in OpsWorks. 
+    # Note that attaching an ELB will trigger a Configure event.
     
     to_layer.register_instances_with_elb(elb_name)
 
@@ -90,6 +91,7 @@ class OpsWorks
     if from_layer and from_layer.has_elb?(elb_name)
       from_layer.detach_elb(elb_name)
     end
+
     to_layer.attach_elb(elb_name)
   end
 
