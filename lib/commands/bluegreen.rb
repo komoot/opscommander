@@ -126,7 +126,7 @@ def bluegreen(ops, configuration, input, mixed_state_duration)
       end
     end
 
-    puts "Now, the blue stack is active. Let it run for a while..."
+    puts "Now, the blue stack is active."
     Events.execute(configuration['events']['bluegreen_on_blue_active']) if configuration['events']
 
     continue = input.choice("Do you want to continue and delete the old green stack (y), switch back to green or abort", "Yga")
