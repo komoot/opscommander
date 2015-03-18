@@ -309,6 +309,17 @@ class OpsWorksStack
     end
   end
 
+  def find_all_layers
+    return find_layers_by_name()
+  end
+
+  def enable_load_based_auto_scaling
+    layers = find_all_layers()
+    layers.each do |layer|
+      layer.enable_load_based_auto_scaling
+    end
+  end
+
   private
 
   def deployment_finished?(status)
