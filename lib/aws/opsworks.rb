@@ -30,10 +30,10 @@ class OpsWorks
       stack = stacks.select{|s| s[:name] == stack_name}.first
       if stack
         return OpsWorksStack.new(self, stack, @verbose)
+      else
+        raise "Couldn't find stack with name #{stack_name}"
       end
     end
-
-    return nil
   end
 
   # Create stack
