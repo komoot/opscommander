@@ -68,7 +68,7 @@ def bootstrap_stack(ops, config, input, options_hash)
       update_alarms(l['elb']['alarms']) if l['elb']['alarms']
     end
 
-    if l['load_based_auto_scaling'] and l['load_based_auto_scaling']['enabled']
+    if l['load_based_auto_scaling'] and l['load_based_auto_scaling']['enabled'] and options_hash[:enable_auto_scaling]
       validate_load_based_auto_scaling_config(config, l)
       lb_config_name = l['load_based_auto_scaling']['config']
       layer.enable_load_based_auto_scaling(config['load_based_auto_scaling'][lb_config_name]) 
