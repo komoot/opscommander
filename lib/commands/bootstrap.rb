@@ -55,7 +55,7 @@ def bootstrap_stack(ops, config, input, options_hash)
     end
 
     if l['load_based_auto_scaling'] and l['load_based_auto_scaling']['enabled']
-      layer.enable_load_based_auto_scaling(config['load_based_auto_scaling'], {:enable => options_hash[:enable_load_based_auto_scaling]})
+      layer.configure_load_based_auto_scaling(config['load_based_auto_scaling'], l, {:enable => options_hash[:enable_load_based_auto_scaling]})
     end
 
   end

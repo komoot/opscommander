@@ -1,11 +1,10 @@
 require 'poll'
 
 class OpsWorksLayer
-  def initialize(stack, layer, layer_config, verbose)
+  def initialize(stack, layer, verbose)
     @stack = stack
     @client = stack.opsworks.client if stack   # Convenience
     @layer = layer
-    @layer_config = layer_config
     @verbose = verbose
   end
 
@@ -134,12 +133,12 @@ class OpsWorksLayer
     @client.describe_instances({:layer_id => @layer[:layer_id]})[:instances]
   end
 
-  def configure_load_based_auto_scaling(available_configs, options_hash) 
-    desired_config = @layer_config['load_based_auto_scaling']['config']
-    validate_load_based_auto_scaling_config(available_configs, desired_config)
+  def configure_load_based_auto_scaling(available_configs, layer_config, options_hash) 
+    desired_config = layer_config['load_based_auto_scaling']['config']
+    validate_load_based_auto_scaling_config(available_configs, desired_config, layer_config)
     config = available_configs[desired_config]
 
-    puts "Enabling load-based auto scaling for layer '#{@layer_config['config']['name']}'" if @verbose
+    puts "Enabling load-based auto scaling for layer '#{name}'" if @verbose
     @client.set_load_based_auto_scaling({
       :layer_id => layer_id,
       :enable => options_hash[:enable],
@@ -150,11 +149,11 @@ class OpsWorksLayer
 
   private
 
-  def validate_load_based_auto_scaling_config(available_configs, desired_config) 
+  def validate_load_based_auto_scaling_config(available_configs, desired_config, layer_config) 
     raise "Key 'load_based_auto_scaling' not found in configuration!" if available_configs.empty?
     raise "No load-based configuration with the name '#{desired_config}' found!" if not available_configs[desired_config]
 
-    instances = @layer_config['instances'].select{|i| i['auto_scaling_type'].eql? 'load'}
+    instances = layer_config['instances'].select{|i| i['auto_scaling_type'].eql? 'load'}
     raise "Load-based auto scaling was enabled but no 'load' instances defined!" if instances.empty?
   end
 
