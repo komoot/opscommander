@@ -44,7 +44,8 @@ command :bootstrap do |c|
     
     configuration = OpsWorksConfig.load(options.config_file, parse_variables(options.variables, options.verbose))
 
-    bootstrap(ops, configuration, options.start, input, options.create_elbs)
+    bootstrap(ops, configuration, input, {:start_instances => options.start, :create_elbs => options.create_elbs, :attach_elb => true)
+
   end
 end
 
