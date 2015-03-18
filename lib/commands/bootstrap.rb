@@ -1,8 +1,3 @@
-require 'erb'
-require 'base64'
-require 'poll'
-
-require_relative '../aws/ec2_autoscale.rb'
 require_relative '../utils.rb'
 require_relative '../console.rb'
 
