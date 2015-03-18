@@ -107,7 +107,7 @@ def bluegreen(ops, configuration, input, mixed_state_duration)
 
   # Start the blue stack and put its layers into the deployment strategy.
   # ELB does not have to be created, because we will re-use the green layer's ELB
-  blue_stack = bootstrap_stack(ops, blue_configuration, input, {:attach_elb => true, :create_elb => false, :enable_auto_scaling => true})
+  blue_stack = bootstrap_stack(ops, blue_configuration, input, {:attach_elb => true, :create_elb => false, :start_instances => true, :enable_auto_scaling => true})
 
   blue_stack.find_layers_by_name.each do |blue_layer|
     deployment_strategy[blue_layer.name][:blue_layer] = blue_layer
