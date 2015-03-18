@@ -147,8 +147,11 @@ def bluegreen(ops, configuration, input, mixed_state_duration)
       
     elsif continue == "y"
       blue_stack.rename_to stack_name
-      blue_stack.enable_load_based_auto_scaling
       green_stack.delete
+
+      # Finally enable load-based auto scaling - we don't have it enabled during the blue-green deployment
+      # to avoid unnecessary scaling due to CPU-intensive OpsWorks events.
+      blue_stack.enable_load_based_auto_scaling
       break
     end
   end
