@@ -138,7 +138,7 @@ class OpsWorksLayer
     validate_load_based_auto_scaling_config(available_configs, desired_config, layer_config)
     config = available_configs[desired_config]
 
-    puts "Enabling load-based auto scaling for layer '#{name}'" if @verbose
+    puts "Configuring load-based auto scaling for layer '#{name}'" if @verbose
     @client.set_load_based_auto_scaling({
       :layer_id => layer_id,
       :enable => options_hash[:enable],
@@ -148,11 +148,12 @@ class OpsWorksLayer
   end
 
   def enable_load_based_auto_scaling
-      autoscaling_setup = @client.describe_load_based_auto_scaling({:layer_ids => [layer_id]})[:load_based_auto_scaling_configurations]
-      autoscaling_setup.each do |as|
-        as[:enable] = true
-        @client.set_load_based_auto_scaling(as)
-      end
+    puts "Enabling load-based auto scaling for layer '#{name}'" if @verbose
+    autoscaling_setup = @client.describe_load_based_auto_scaling({:layer_ids => [layer_id]})[:load_based_auto_scaling_configurations]
+    autoscaling_setup.each do |as|
+      as[:enable] = true
+      @client.set_load_based_auto_scaling(as)
+    end
   end
 
   private
