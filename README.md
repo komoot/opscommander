@@ -187,7 +187,7 @@ Performs a blue-green deployment using the following pattern:
 
 1. The currently running stack is renamed to \<stack name\>-green.
 2. A new \<stack name\>-blue stack is created and started.
-3. When the blue stack is online, ELBs are switched over from the green stack. The ELBs will for a short while contain instances from both stacks.
+3. When the blue stack is online, ELBs are switched over from the green stack. The ELBs will for a short while contain instances from both stacks. This mixed-state duration can be increased with an optional argument, see below.
 4. The green stack is stopped and deleted.
 5. The blue stack is renamed to \<stack name\> and is now the new live stack.
 
@@ -205,6 +205,7 @@ may have to be implemented as part of the deployment recipe if the application t
 
 * `--config-file`: stack configuration file
 * `--variables`: template variables for the stack configuration file
+* `--mixed-state-duration`: desired mixed-state duration, in seconds. In some cases it may be desirable to increase the mixed-state duration, e.g. for warm-up purposes. Default = 0.
 
 ##### Example
 
