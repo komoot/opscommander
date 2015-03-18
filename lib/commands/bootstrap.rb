@@ -25,15 +25,6 @@ def bootstrap(aws_connection, config, input, options_hash)
 
 end
 
-def validate_load_based_auto_scaling_config(config, layer_config) 
-  raise "Key 'load_based_auto_scaling' not found in configuration!" if not config['load_based_auto_scaling'] 
-  lb_config_name = layer_config['load_based_auto_scaling']['config']
-  raise "No load-based configuration with the name '#{lb_config_name}' found!" if not config['load_based_auto_scaling'][lb_config_name]
-  
-  instances = layer_config['instances'].select{|i| i['auto_scaling_type'].eql? 'load'}
-  raise "Load-based auto scaling was enabled but no 'load' instances defined!" if instances.empty?
-end
-
 # Creates a new stack from the given config. If a stack with the given name already
 # exists, no exception is thrown and you have two stacks with the same name.
 def bootstrap_stack(ops, config, input, options_hash)
@@ -63,10 +54,8 @@ def bootstrap_stack(ops, config, input, options_hash)
       update_alarms(l['elb']['alarms']) if l['elb']['alarms']
     end
 
-    if l['load_based_auto_scaling'] and l['load_based_auto_scaling']['enabled'] and options_hash[:enable_auto_scaling]
-      validate_load_based_auto_scaling_config(config, l)
-      lb_config_name = l['load_based_auto_scaling']['config']
-      layer.enable_load_based_auto_scaling(config['load_based_auto_scaling'][lb_config_name]) 
+    if l['load_based_auto_scaling'] and l['load_based_auto_scaling']['enabled']
+      layer.enable_load_based_auto_scaling(config['load_based_auto_scaling'], {:enable => options_hash[:enable_load_based_auto_scaling]})
     end
 
   end

@@ -91,14 +91,15 @@ class OpsWorksStack
 
   # Creates a layer with the given options hash.
   # See {http://docs.aws.amazon.com/AWSRubySDK/latest/AWS/OpsWorks/Client.html#create_layer-instance_method}.
-  # @param layer_options [Hash] 
-  # @return [String] The ID of the new layer.
-  def create_layer(layer_options)
+  # @param layer_config [Hash] 
+  # @return [OpsworksLayer] An object representing the new layer
+  def create_layer(layer_config)
+    layer_options = layer_config['config']
     puts "Creating Layer \t#{stack_name} :: #{layer_options['name']}" if @verbose
     copy = layer_options.clone
     copy['stack_id'] = stack_id
     layer = @client.create_layer(copy)
-    OpsWorksLayer.new(self, layer, @verbose)
+    OpsWorksLayer.new(self, layer, layer_config, @verbose)
   end
 
   # Creates an instance with the given options hash.
