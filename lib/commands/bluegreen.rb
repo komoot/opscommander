@@ -114,7 +114,10 @@ def bluegreen(ops, configuration, input, mixed_state_duration)
     deployment_strategy[blue_layer.name][:blue_layer] = blue_layer
   end
 
-  puts "\nAll instances in the blue stack are running."
+  puts "\nAll instances in the blue stack are running. Waiting for Configure events to settle ..."
+
+  # Sleep for 30 seconds to let configure events settle
+  sleep(30)
 
   while true do
     continue = input.choice("The green stack is currently active. Do you want to switch to the blue stack (yes) or remove the blue stack or abort?", "Yra")
