@@ -22,7 +22,7 @@ class OpsWorks
   # Searches the stack with the given name
   #
   # @param stack_name [String] The stack name, e.g. "routing-alpha"
-  # @return OpsWorksStack instance
+  # @return OpsWorksStack instance or nil
   def find_stack(stack_name)
     stacks = @client.describe_stacks()[:stacks]
     puts "#{stacks.length} stacks found in total." if @verbose
@@ -31,7 +31,7 @@ class OpsWorks
       if stack
         return OpsWorksStack.new(self, stack, @verbose)
       else
-        raise "Couldn't find stack with name #{stack_name}"
+        return nil
       end
     end
   end
