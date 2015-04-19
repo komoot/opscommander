@@ -19,7 +19,7 @@ in the old stack to the new stack without downtime. See the [`bluegreen` command
 
 #### 1.0.7
 
-- For blue-green deployments, load-based auto scaling is enabled only after the deployment is finished. This avoids unnecessary scaling from occuring due to CPU-intensive OpsWorks events during the deployment.
+- For blue-green deployments, load-based auto scaling is enabled only after the deployment is finished. This prevents unnecessary scaling from occuring due to CPU-intensive OpsWorks events during the deployment.
 
 #### 1.0.6
 
