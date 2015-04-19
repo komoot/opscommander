@@ -56,7 +56,7 @@ You can install the gem into your local gem repository:
 
 ```
 $> gem build opscommander.gemspec
-$> gem install opscommander-1.0.5.gem
+$> gem install opscommander-1.0.7.gem
 ``` 
 
 ### Run without installing
