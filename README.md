@@ -138,8 +138,7 @@ $> opscommander delete notsoawesome-stack
 ### rename
 
 Renames a stack. Also updates the EC2 instance tags that OpsWorks sets when creating an instance to reflect
-the new stack name. Triggers the "Configuration" OpsWorks lifecycle event which you can hook into for e.g. 
-updating logging configuration, if the stack name is used there.
+the new stack name.
 
 ##### Example
 
