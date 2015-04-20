@@ -41,12 +41,16 @@ def bootstrap_stack(ops, config, input, options_hash)
   layers = []
   config['layers'].each do |l|
     layer_aws_config = l['config']
-    aws_instances = l['instances']
     layer = stack.create_layer(layer_aws_config)
-    aws_instances.each do |i|
-      layer.create_instance(i)
+
+    if not l.has_key?('instances')
+      puts "Warning! no instances key for layer #{layer_aws_config['name']}"
+    else
+      l['instances'].each do |i|
+        layer.create_instance(i)
+      end
+      layers.push(layer)
     end
-    layers.push(layer)
 
     if l['elb']
       stack.create_elb(l['elb']) if options_hash[:create_elb]
