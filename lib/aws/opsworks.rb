@@ -10,11 +10,15 @@ class OpsWorks
   attr_reader :client
 
   attr_reader :elb_client
+
+  def self.build(aws_connection)
+    new(AWS::OpsWorks::Client.new({:region => 'us-east-1'}), AWS::ELB.new, aws_connection.verbose)
+  end
   
-  def initialize(aws_connection)
-    @verbose = aws_connection.verbose
-    @client = AWS::OpsWorks::Client.new({:region => 'us-east-1'})
-    @elb_client = AWS::ELB.new
+  def initialize(opsworks_client, elb_client, verbose)
+    @verbose = verbose
+    @client = opsworks_client
+    @elb_client = elb_client
   end
 
   public

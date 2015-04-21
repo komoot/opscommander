@@ -5,7 +5,7 @@ require_relative '../console.rb'
 # Bootstraps a stack. 
 #
 def bootstrap(aws_connection, config, input, options_hash)
-  ops = OpsWorks.new(aws_connection)
+  ops = OpsWorks.build(aws_connection)
   stack_name = config['stack']['name']
 
   # check if stack already exists
