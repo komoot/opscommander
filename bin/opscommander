@@ -66,7 +66,7 @@ end
 
 command :rename do |c|
   c.syntax = 'opscommander rename <old stack name> <new stack name>'
-  c.description = 'Renames a stack. Updates EC2 instance tags to reflect new name. Triggers OpsWorks Configuration lifecycle event.'
+  c.description = 'Renames a stack. Updates EC2 instance tags to reflect new name.'
   c.action do |args, options|
     old_name = args[0]
     new_name = args[1]
