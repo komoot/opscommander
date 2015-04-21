@@ -8,7 +8,7 @@ class OpsWorksStack
 
   attr_reader :opsworks
 
-  def sef.build(opsworks, stack, verbose=false) 
+  def self.build(opsworks, stack, verbose=false) 
     new(opsworks, stack, AWS::EC2.new, verbose)
   end
 
