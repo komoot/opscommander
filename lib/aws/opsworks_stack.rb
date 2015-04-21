@@ -1,6 +1,5 @@
-#require 'poll'
-
 require 'aws-sdk-v1'
+
 require_relative 'opsworks_layer.rb'
 require_relative 'opsworks_app.rb'
 require_relative 'opsworks_deployment.rb'
@@ -9,11 +8,16 @@ class OpsWorksStack
 
   attr_reader :opsworks
 
-  def initialize(opsworks, stack, verbose)
+  def sef.build(opsworks, stack, verbose=false) 
+    new(opsworks, stack, AWS::EC2.new, verbose)
+  end
+
+  def initialize(opsworks, stack, ec2_client, verbose)
     @opsworks = opsworks
+    # Convenience
     @client = opsworks.client
-    @ec2_client = AWS::EC2.new
     @stack = stack
+    @ec2_client = ec2_client
     @verbose = verbose
   end
 
@@ -147,7 +151,7 @@ class OpsWorksStack
       :name => new_stack_name
       })
 
-    stack = OpsWorksStack.new(@opsworks, stack)
+    stack = OpsWorksStack.build(@opsworks, stack)
     puts "cloned stack #{stack[:stack_id]}" if @verbose
     return stack
   end

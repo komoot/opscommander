@@ -33,7 +33,7 @@ class OpsWorks
     if stacks.length > 0
       stack = stacks.select{|s| s[:name] == stack_name}.first
       if stack
-        return OpsWorksStack.new(self, stack, @verbose)
+        return OpsWorksStack.build(self, stack, @verbose)
       else
         return nil
       end
@@ -53,7 +53,7 @@ class OpsWorks
       stack_config['region'] = AWS.config.region
     end
     stack = @client.create_stack(stack_config)
-    return OpsWorksStack.new(self, stack, @verbose)
+    return OpsWorksStack.build(self, stack, @verbose)
   end
 
   # Creates an instance with the given options hash.
