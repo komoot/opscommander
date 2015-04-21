@@ -68,6 +68,12 @@ $> bundle install
 $> ruby -Ilib bin/opscommander ... 
 ```
 
+### Running the tests
+
+`
+$> rspec
+`
+
 ### Access credentials
 
 Opscommander uses the Ruby AWS SDK internally. For more information on how to provide access credentials
