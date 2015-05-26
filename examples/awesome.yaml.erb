@@ -204,11 +204,16 @@ layers:
 
 # Configure an OpsWorks application. In our example it is Docker-based, so there is not much 
 # to configure. If a variable called 'tag' is not found, the 'latest' tag is used.
+#
+# Protected variables are supported using the 'secure_enviroment' key.
+
 apps:
   awesome-app:
-    type: 'other'
+    type: other
     app_source:
-      type: 'other'
+      type: other
     environment:
       TAG: "<%= tag || 'latest' %>"
       LAYER: java-app
+    secure_environment:
+      SECRET_KEY: top_secret
