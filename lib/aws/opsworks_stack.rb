@@ -197,16 +197,24 @@ class OpsWorksStack
       # no app exists with the same name
     end
 
-    options = config['apps'][name]
     # remap environment from our configuration style to OpsWorks' 
     
-    options['environment'] = options['environment'].collect{ |k, v|
-      {'key' => "#{k}", 'value' => "#{v}"}
-    }
+    options = {}
 
+    collect = lambda do |env_config, secure|
+      if env_config
+        return env_config.collect{ |k, v| {'key' => "#{k}", 'value' => "#{v}", 'secure' => secure} }
+      else
+        return []
+      end
+    end
+
+    options['environment'] = collect.call(config['environment'], false)
+    options['environment'].concat(collect.call(config['secure_environment'], true))
+    options['type'] = config['type']
     options['name'] = name
     options['stack_id'] = stack_id
-    options['data_sources'] = [] if not options['data_sources']
+    options['data_sources'] = [] if not config['data_sources']
 
     app = @client.create_app(options)
     puts "Created app '#{name}'."

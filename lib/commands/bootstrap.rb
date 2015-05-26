@@ -65,7 +65,7 @@ def bootstrap_stack(ops, config, input, options_hash)
   end
 
   config['apps'].each do |a, value|
-    stack.create_app(a, config)
+    stack.create_app(a, config['apps'][a])
   end
 
   if options_hash[:start_instances]
