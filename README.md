@@ -17,9 +17,13 @@ in the old stack to the new stack without downtime. See the [`bluegreen` command
 
 ## Changelog
 
+#### 1.0.8
+
+- Apps can now have secret environment variables.
+
 #### 1.0.7
 
-- For blue-green deployments, load-based auto scaling is enabled only after the deployment is finished. This prevents unnecessary scaling from occuring due to CPU-intensive OpsWorks events during the deployment.
+- For blue-green deployments, load-based auto scaling is enabled only after the deployment is finished. This may help to avoid unnecessary load-based scaling directly after deployment.
 
 #### 1.0.6
 
