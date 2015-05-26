@@ -160,7 +160,7 @@ command :bluegreen do |c|
     conn = connect(options.verbose)
     input = open_input(options.yes)
     configuration = OpsWorksConfig.load(options.config_file, parse_variables(options.variables, options.verbose))
-    bluegreen(OpsWorks.new(conn), configuration, input, options.mixed_state_duration)
+    bluegreen(OpsWorks.build(conn), configuration, input, options.mixed_state_duration)
   end
 end
 
