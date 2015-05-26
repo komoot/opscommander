@@ -62,6 +62,10 @@ def bootstrap_stack(ops, config, input, options_hash)
       layer.configure_load_based_auto_scaling(config['load_based_auto_scaling'], l, {:enable => options_hash[:enable_auto_scaling]})
     end
 
+    if l['time_based_auto_scaling'] and l['time_based_auto_scaling']['enabled']
+      layer.configure_time_based_auto_scaling(config['time_based_auto_scaling'], l)
+    end
+
   end
 
   config['apps'].each do |a, value|

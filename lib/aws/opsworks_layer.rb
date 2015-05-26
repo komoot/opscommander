@@ -1,5 +1,7 @@
 require 'poll'
 
+require_relative 'auto_scaling_schedule.rb'
+
 class OpsWorksLayer
   def initialize(stack, layer, verbose)
     @stack = stack
@@ -127,9 +129,7 @@ class OpsWorksLayer
   end     
 
   # retrieves all instances in this layer.
-  # optional filter
-  # 
-  def get_instances(filter={})
+  def get_instances()
     @client.describe_instances({:layer_id => @layer[:layer_id]})[:instances]
   end
 
@@ -145,6 +145,19 @@ class OpsWorksLayer
       :up_scaling => config['up_scaling'],
       :down_scaling => config['down_scaling']
     })
+  end
+
+  def configure_time_based_auto_scaling(available_configs, layer_config) 
+    desired_config = layer_config['time_based_auto_scaling']['config']
+    validate_time_based_auto_scaling_config(available_configs, desired_config, layer_config)
+    config = available_configs[desired_config]
+
+    puts "Configuring time-based auto scaling for layer '#{name}'" if @verbose
+
+    schedule = AutoScalingSchedule.build(@stack, config)
+    instances = get_instances()
+    time_instance_ids = instances.select{ |i| i[:auto_scaling_type].eql? 'timer' }.map{ |i| i[:instance_id] }
+    schedule.apply(time_instance_ids)
   end
 
   def enable_load_based_auto_scaling
@@ -164,6 +177,14 @@ class OpsWorksLayer
 
     instances = layer_config['instances'].select{|i| i['auto_scaling_type'].eql? 'load'}
     raise "Load-based auto scaling was enabled but no 'load' instances defined!" if instances.empty?
+  end
+
+  def validate_time_based_auto_scaling_config(available_configs, desired_config, layer_config) 
+    raise "Key 'time_based_auto_scaling' not found in configuration!" if available_configs.empty?
+    raise "No time-based configuration with the name '#{desired_config}' found!" if not available_configs[desired_config]
+
+    instances = layer_config['instances'].select{|i| i['auto_scaling_type'].eql? 'timer'}
+    raise "Time-based auto scaling was enabled but no 'time' instances defined!" if instances.empty?
   end
 
   def disable_load_based_auto_scaling

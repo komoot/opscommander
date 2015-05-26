@@ -103,6 +103,7 @@ permissions:
     ssh: true
     
 # Configure a load-based autoscaling policy.
+
 load_based_auto_scaling:
   default:
     up_scaling:
@@ -115,6 +116,13 @@ load_based_auto_scaling:
       thresholds_wait_time: 10
       ignore_metrics_time: 10
       cpu_threshold: 60
+
+# Configure a time-based autoscaling policy.
+# Times are in UTC.
+
+time_based_auto_scaling:
+  default:
+    sunday: 8-20
 
 # Layer configuration. We have only a single layer here, but we could define multiple ones.
 layers:
@@ -129,12 +137,15 @@ layers:
            deploy: ["awesome-app::containers"]
 
 <% if environment.eql? 'live' %>
-     # Only configure load-based autoscaling for the live environment.
+     # Only configure autoscaling for the live environment.
      load_based_auto_scaling: 
         enabled: true
         config: 'default'
+     time_based_auto_scaling: 
+        enabled: true
+        config: 'default'
      instances:
-  <% for subnet, scale_type in [subnet_a, '24/7', subnet_a, 'load', subnet_b, '24/7', subnet_b, 'load'].each_slice(2) %>
+  <% for subnet, scale_type in [subnet_a, '24/7', subnet_a, 'load', subnet_b, '24/7', subnet_b, 'load', subnet_b, 'timer'].each_slice(2) %>
         - subnet_id: <%= subnet %>
           instance_type: m3.large
           os: Ubuntu 14.04 LTS
@@ -143,6 +154,8 @@ layers:
   <% end %>
 <% else %>
      load_based_auto_scaling: 
+        enabled: false
+     time_based_auto_scaling: 
         enabled: false
      instances:
         - instance_type: m3.large
