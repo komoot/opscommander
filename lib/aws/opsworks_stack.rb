@@ -12,7 +12,7 @@ class OpsWorksStack
     new(opsworks, stack, AWS::EC2.new, verbose)
   end
 
-  def initialize(opsworks, stack, ec2_client, verbose)
+  def initialize(opsworks, stack, ec2_client, verbose=false)
     @opsworks = opsworks
     # Convenience
     @client = opsworks.client
