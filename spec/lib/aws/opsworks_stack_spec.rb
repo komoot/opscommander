@@ -44,8 +44,6 @@ describe 'opsworks_stack' do
     expect(client_argument['environment'].length).to equal(2)
     expect(client_argument['environment'][0]['secure']).to equal(false)
     expect(client_argument['environment'][1]['secure']).to equal(true)
-
-    print client_argument
   end
 
 end
