@@ -17,6 +17,18 @@ in the old stack to the new stack without downtime. See the [`bluegreen` command
 
 ## Changelog
 
+#### 1.0.9
+
+- Support for time-based auto-scaling. Times are in UTC, see the [sample YAML config](https://github.com/komoot/opscommander/blob/master/examples/awesome.yaml.erb) for a complete example:
+
+```
+time_based_auto_scaling:
+  default:
+    saturday: 10-16
+    sunday: 8-20
+
+```
+
 #### 1.0.8
 
 - Apps can now have secret environment variables.
