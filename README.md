@@ -51,7 +51,7 @@ time_based_auto_scaling:
 
 #### 1.0.3
 
-Initial stable release.
+- Initial stable release.
 
 
 ## Installing and running Opscommander
