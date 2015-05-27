@@ -184,7 +184,7 @@ class OpsWorksLayer
     raise "No time-based configuration with the name '#{desired_config}' found!" if not available_configs[desired_config]
 
     instances = layer_config['instances'].select{|i| i['auto_scaling_type'].eql? 'timer'}
-    raise "Time-based auto scaling was enabled but no 'time' instances defined!" if instances.empty?
+    raise "Time-based auto scaling was enabled but no 'timer' instances defined!" if instances.empty?
   end
 
   def disable_load_based_auto_scaling
