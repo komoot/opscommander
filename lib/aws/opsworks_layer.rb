@@ -55,7 +55,7 @@ class OpsWorksLayer
   def send_start
     ids = []
     get_instances().each do |i|
-      if not ['load', 'time'].include?(i[:auto_scaling_type])
+      if not ['load', 'timer'].include?(i[:auto_scaling_type])
         puts "starting #{i[:name]} #{i[:auto_scaling_type]}" if @verbose
         @client.start_instance({:instance_id => i[:instance_id]})
         ids.push(i[:instance_id])
