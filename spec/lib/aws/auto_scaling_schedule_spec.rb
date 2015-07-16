@@ -37,5 +37,16 @@ describe 'auto_scaling_schedule' do
     expect(@client_argument[:auto_scaling_schedule][:sunday]).to eq({'9' => 'on', '10' => 'on', '11' => 'on', '12' => 'on'})
   end
 
+  it 'can disable time-based scaling' do
+    schedule = AutoScalingSchedule.new(@client, AutoScalingSchedule.no_scaling)
+    schedule.apply(['some-instance'])
+
+    days = [:monday, :tuesday, :wednesday, :thursday, :friday, :saturday, :sunday]
+    days.each do |d|
+      expect(@client_argument[:auto_scaling_schedule][d]).to eq({})
+    end
+
+  end
+
 end
 

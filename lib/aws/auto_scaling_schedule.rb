@@ -1,5 +1,10 @@
 class AutoScalingSchedule
 
+  # Empty config will disable scaling
+  def self.no_scaling() 
+    {}
+  end
+
   def self.build(stack, config)
     new(stack.opsworks.client, config)
   end
