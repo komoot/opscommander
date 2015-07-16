@@ -43,6 +43,7 @@ class OpsWorksLayer
   # sends a stop signal to all instances in this layer
   def send_stop
     disable_load_based_auto_scaling()
+    disable_time_based_auto_scaling()
     ids = []
       get_instances().each do |i|
         @client.stop_instance({:instance_id => i[:instance_id]})
@@ -160,6 +161,13 @@ class OpsWorksLayer
     schedule.apply(time_instance_ids)
   end
 
+  def disable_time_based_auto_scaling()
+    schedule = AutoScalingSchedule.build(@stack, AutoScalingSchedule.no_scaling)
+    instances = get_instances()
+    time_instance_ids = instances.select{ |i| i[:auto_scaling_type].eql? 'timer' }.map{ |i| i[:instance_id] }
+    schedule.apply(time_instance_ids)
+  end
+
   def enable_load_based_auto_scaling
     puts "Enabling load-based auto scaling for layer '#{name}'" if @verbose
     autoscaling_setup = @client.describe_load_based_auto_scaling({:layer_ids => [layer_id]})[:load_based_auto_scaling_configurations]
@@ -196,5 +204,7 @@ class OpsWorksLayer
         end
       end
   end
+
+
 
 end
