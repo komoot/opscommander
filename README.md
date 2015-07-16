@@ -17,6 +17,10 @@ in the old stack to the new stack without downtime. See the [`bluegreen` command
 
 ## Changelog
 
+#### 1.0.10
+
+- Disable time-based auto-scaling when shutting down layer.
+
 #### 1.0.9
 
 - Support for time-based auto-scaling. Times are in UTC, see the [sample YAML config](https://github.com/komoot/opscommander/blob/master/examples/awesome.yaml.erb) for a complete example:
