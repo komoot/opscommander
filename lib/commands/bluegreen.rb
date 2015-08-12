@@ -107,8 +107,15 @@ def bluegreen(ops, configuration, input, mixed_state_duration)
 
   # Start the blue stack and put its layers into the deployment strategy.
   # ELB does not have to be created, because we will re-use the green layer's ELB.
-  # Load-based auto scaling is enabled only at the end of a blue-green deployment.
-  blue_stack = bootstrap_stack(ops, blue_configuration, input, {:start_instances => true, :attach_elb => false, :create_elb => false, :enable_auto_scaling => false})
+  # Load-based auto scaling is enabled only at the end of a blue-green deployment,
+  # but we synch the number of pre-started load based instances from the green layer.
+  options = {:start_instances => true, :load_instances_to_start => {}, :attach_elb => false, :create_elb => false, :enable_auto_scaling => false}
+
+  green_layers.each do |l|
+    options[:load_instances_to_start][l.name] = l.get_running_load_instances().length
+  end
+
+  blue_stack = bootstrap_stack(ops, blue_configuration, input, options)
 
   blue_stack.find_layers_by_name.each do |blue_layer|
     deployment_strategy[blue_layer.name][:blue_layer] = blue_layer

@@ -74,10 +74,17 @@ def bootstrap_stack(ops, config, input, options_hash)
 
   if options_hash[:start_instances]
     instances = []
+
     layers.each do |l|
       started = l.send_start
       instances += started
+
+      if options_hash[:load_instances_to_start] and options_hash[:load_instances_to_start][l.name] > 0
+        started_load_instances = l.start_load_instances(options_hash[:load_instances_to_start][l.name])
+        instances += started_load_instances
+      end
     end
+
     ops.wait_for_instances_status(instances, "online", ["stopped", "requested", "pending", "booting", "running_setup"])
   end
 
