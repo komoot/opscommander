@@ -41,7 +41,7 @@ class OpsWorksLayer
     @client.delete_layer({:layer_id => layer_id})
   end
 
-  # sends a stop signal to all instances in this layer
+  # Sends a stop signal to all instances in this layer
   def send_stop
     disable_load_based_auto_scaling()
     disable_time_based_auto_scaling()
@@ -53,7 +53,7 @@ class OpsWorksLayer
       return ids
   end
 
-  # sends a start signal to all permanent instances in this layer
+  # Sends a start signal to all permanent instances in this layer
   def send_start
     ids = []
     get_instances().each do |i|
