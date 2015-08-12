@@ -3,7 +3,8 @@ require 'poll'
 require_relative 'auto_scaling_schedule.rb'
 
 class OpsWorksLayer
-  def initialize(stack, layer, verbose)
+
+  def initialize(stack, layer, verbose = false)
     @stack = stack
     @client = stack.opsworks.client if stack   # Convenience
     @layer = layer
@@ -146,6 +147,11 @@ class OpsWorksLayer
       :up_scaling => config['up_scaling'],
       :down_scaling => config['down_scaling']
     })
+  end
+
+  def get_running_load_instances()
+    instances = get_instances()
+    instances.select{ |i| i[:auto_scaling_type].eql? 'load' and ['requested', 'pending', 'running_setup', 'online'].include? i[:status] }
   end
 
   def configure_time_based_auto_scaling(available_configs, layer_config) 
