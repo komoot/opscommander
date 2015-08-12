@@ -4,7 +4,7 @@ $:.push File.expand_path("../lib", __FILE__)
 Gem::Specification.new do |s|
   s.name        = "opscommander"
   s.license     = "Apache 2.0"
-  s.version     = "1.0.11"
+  s.version     = "1.0.12"
   s.platform    = Gem::Platform::RUBY
   s.authors     = ["Jan Heuer", "Johannes Staffans"]
   s.email       = ["jan@komoot.de" "johannes@komoot.de"]
