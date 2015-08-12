@@ -105,6 +105,20 @@ If you decide to run Opscommander in the AWS cloud, for example as part of a con
 you should be aware that the instance profile of the instance that Opscommander runs on needs to include 
 EC2, ELB and OpsWorks full access policies.
 
+### Using pry
+
+Pry can be useful for trying out individual library methods:
+
+```ruby
+[1] pry(main)> AWS.config({:access_key_id => '...', :secret_access_key => '...', :region => '...'})
+[2] pry(main)> aws_connection = AwsConfiguration.new 
+[3] pry(main)> load './lib/aws/opsworks.rb'
+[4] pry(main)> ops = OpsWorks.build(aws_connection)
+[5] pry(main)> stack = ops.find_stack 'some-stack-shortname'
+[6] pry(main)> stack.find_layers_by_name.first 
+...
+```
+
 ## Stack configuration
 
 See [awesome.yaml.erb](https://github.com/komoot/opscommander/blob/master/examples/awesome.yaml.erb) for
