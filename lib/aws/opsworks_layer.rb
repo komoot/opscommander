@@ -66,6 +66,44 @@ class OpsWorksLayer
     return ids
   end
 
+  # Starts a number of load-based instances. 
+  # Can be used to have the new layer's number of instances
+  # equal the old layer's during deployments.
+  def start_load_instances(num_instances)
+    load_instances = get_instances().select{ |i| i[:auto_scaling_type].eql? 'load' }
+
+    if num_instances > load_instances.length
+      raise "Can't start #{num_instances} instances because the layer only has #{load_instances.length} load-based instances configured."
+    end
+
+    num_to_start = num_instances - load_instances.select{ |i| launched? i }.length
+
+    ids = []
+    load_instances.select{ |i| not launched? i }.take(num_to_start).each do |i|
+      puts "starting #{i[:hostname]} #{i[:auto_scaling_type]}" if @verbose
+      @client.start_instance({:instance_id => i[:instance_id]})
+      ids.push(i[:instance_id])
+    end
+    ids
+  end
+
+  # Stop a number of launched load-based instances.
+  def stop_load_instances(num_instances)
+    load_instances = get_instances().select{ |i| i[:auto_scaling_type].eql? 'load' }
+
+    if num_instances > load_instances.length
+      raise "Can't stop #{num_instances} instances because the layer only has #{load_instances.length} load-based instances configured."
+    end
+
+    ids = []
+    load_instances.select{ |i| launched? i }.take(num_instances).each do |i|
+      puts "stopping #{i[:hostname]} #{i[:auto_scaling_type]}" if @verbose
+      @client.stop_instance({:instance_id => i[:instance_id]})
+      ids.push(i[:instance_id])
+    end
+    ids
+  end
+
   # Checks if the layer is associated with the given elb
   # @param elb_name [String]
   # @return [Boolean]
@@ -151,7 +189,11 @@ class OpsWorksLayer
 
   def get_running_load_instances()
     instances = get_instances()
-    instances.select{ |i| i[:auto_scaling_type].eql? 'load' and ['requested', 'pending', 'running_setup', 'online'].include? i[:status] }
+    instances.select{ |i| i[:auto_scaling_type].eql? 'load' and launched? i }
+  end
+
+  def launched?(instance) 
+    ['requested', 'pending', 'booting', 'running_setup', 'online'].include? instance[:status] 
   end
 
   def configure_time_based_auto_scaling(available_configs, layer_config) 
