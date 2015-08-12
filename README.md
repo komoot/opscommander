@@ -17,6 +17,10 @@ in the old stack to the new stack without downtime. See the [`bluegreen` command
 
 ## Changelog
 
+#### 1.0.11
+
+- Pre-launch same number of load instances as in the green layer when doing blue-green deployments.
+
 #### 1.0.10
 
 - Disable time-based auto-scaling when shutting down layer.
