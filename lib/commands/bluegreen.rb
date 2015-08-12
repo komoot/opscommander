@@ -116,7 +116,7 @@ def bluegreen(ops, configuration, input, mixed_state_duration)
 
   puts "\nAll instances in the blue stack are running. Waiting for Configure events to settle ..."
 
-  # Sleep for 30 seconds to let configure events settle
+  # Sleep to let configure events settle
   sleep(30)
 
   while true do
