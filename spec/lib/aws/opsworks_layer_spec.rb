@@ -7,7 +7,7 @@ describe 'opsworks_layer' do
     @client = double('client')
     opsworks = double('opsworks', :client => @client)
     stack = OpsWorksStack.new(opsworks, {}, double('ec2_client'))
-    @layer = OpsWorksLayer.new(stack, {:id => 'test-layer'})
+    @sut = OpsWorksLayer.new(stack, {:id => 'test-layer'})
   end
 
   it 'should find running load instances' do
@@ -19,7 +19,7 @@ describe 'opsworks_layer' do
          {:auto_scaling_type => 'load', :status => 'running_setup'}]}
     )
 
-    expect(@layer.get_running_load_instances().length).to equal(2)
+    expect(@sut.get_running_load_instances().length).to equal(2)
   end
 end
 
