@@ -299,6 +299,8 @@ class OpsWorksStack
       if not lb_placeholder.exists?
         raise "could not find elb #{config['name']} after creation"
       end
+    else
+      puts "skipping existing elb #{config['name']}" if @verbose
     end
 
     lb_placeholder.configure_health_check(config['health_check'])

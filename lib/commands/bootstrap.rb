@@ -53,7 +53,7 @@ def bootstrap_stack(ops, config, input, options_hash)
     end
 
     if l['elb']
-      stack.create_elb(l['elb']) if options_hash[:create_elb]
+      stack.create_elb(l['elb']) if options_hash[:create_elbs]
       layer.attach_elb(l['elb']['name']) if options_hash[:attach_elb]
       update_alarms(l['elb']['alarms']) if l['elb']['alarms']
     end
